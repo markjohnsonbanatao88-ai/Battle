@@ -1,0 +1,13 @@
+-- Run only after the first office user has been created in Supabase Auth.
+-- Replace the email placeholder before executing.
+
+-- insert into public.firm_memberships (firm_id, user_id, role, status)
+-- select
+--   '00000000-0000-0000-0000-00000000b001',
+--   id,
+--   'firm_admin'::public.membership_role,
+--   'active'::public.membership_status
+-- from auth.users
+-- where lower(email) = lower('REPLACE_WITH_ADMIN_EMAIL')
+-- on conflict (firm_id, user_id)
+-- do update set role = excluded.role, status = excluded.status;

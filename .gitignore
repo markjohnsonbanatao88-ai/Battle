@@ -1,0 +1,20 @@
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Dependencies and builds
+node_modules/
+.next/
+dist/
+build/
+
+# Secrets
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
