@@ -1,0 +1,672 @@
+{
+  "schema_version": "1.0",
+  "project": "Batalla & Associates Law Office OS",
+  "current_state": "phase_1_foundation_epic_001_implemented_pending_external_ci_confirmation",
+  "stack": {
+    "web": "Next.js",
+    "database_auth_storage": "Supabase",
+    "hosting": "Vercel",
+    "source_control": "GitHub",
+    "architecture_review": "Claude",
+    "implementation_agent": "Codex"
+  },
+  "defaults": {
+    "timezone": "Asia/Manila",
+    "currency": "PHP",
+    "tenant_model": "single_firm_initial_multi_tenant_safe",
+    "document_bucket": "private",
+    "live_client_ai": "disabled_until_gate",
+    "payment_mode_initial": "authorized_manual_reconciliation"
+  },
+  "prohibited": [
+    "Firebase",
+    "Firestore",
+    "Genkit",
+    "eMango",
+    "BarangayOS",
+    "public legal document buckets",
+    "client-side-only authorization",
+    "real client data in Claude or Codex",
+    "build error suppression",
+    "payment success from unverified UI action",
+    "AI autonomous send/sign/file/settle"
+  ],
+  "required_global_gates": [
+    "server_auth",
+    "firm_membership",
+    "matter_or_portal_authorization",
+    "RLS",
+    "validation",
+    "audit",
+    "safe_errors",
+    "tests",
+    "documentation",
+    "no_unverified_public_content"
+  ],
+  "releases": [
+    {
+      "id": "R0",
+      "name": "Foundation",
+      "epics": [
+        "EPIC-000",
+        "EPIC-001",
+        "EPIC-002",
+        "EPIC-003"
+      ]
+    },
+    {
+      "id": "R1",
+      "name": "Intake and Legal Core",
+      "epics": [
+        "EPIC-010",
+        "EPIC-011",
+        "EPIC-012",
+        "EPIC-013",
+        "EPIC-014",
+        "EPIC-015"
+      ]
+    },
+    {
+      "id": "R2",
+      "name": "Deadlines and Documents",
+      "epics": [
+        "EPIC-020",
+        "EPIC-021",
+        "EPIC-022",
+        "EPIC-023",
+        "EPIC-024",
+        "EPIC-025"
+      ]
+    },
+    {
+      "id": "R3",
+      "name": "Client Collaboration",
+      "epics": [
+        "EPIC-030",
+        "EPIC-031",
+        "EPIC-032",
+        "EPIC-033"
+      ]
+    },
+    {
+      "id": "R4",
+      "name": "Billing and Operations",
+      "epics": [
+        "EPIC-040",
+        "EPIC-041",
+        "EPIC-042",
+        "EPIC-043",
+        "EPIC-044",
+        "EPIC-045"
+      ]
+    },
+    {
+      "id": "R5",
+      "name": "Governance and Controlled Intelligence",
+      "epics": [
+        "EPIC-050",
+        "EPIC-051",
+        "EPIC-052",
+        "EPIC-053",
+        "EPIC-054"
+      ]
+    },
+    {
+      "id": "R6",
+      "name": "Production Readiness",
+      "epics": [
+        "EPIC-060",
+        "EPIC-061",
+        "EPIC-062",
+        "EPIC-063"
+      ]
+    }
+  ],
+  "definition_of_done": "docs/16_DEFINITION_OF_DONE.md",
+  "authority_index": "docs/MASTER_INDEX.md",
+  "decision_register": "docs/19_DECISION_REGISTER.md",
+  "epics": [
+    {
+      "id": "EPIC-000",
+      "name": "Documentation and truth baseline",
+      "dependencies": [],
+      "deliverables": [
+        "MASTER_INDEX",
+        "requirements",
+        "workflows",
+        "permissions",
+        "roadmap"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "complete"
+    },
+    {
+      "id": "EPIC-001",
+      "name": "Test infrastructure",
+      "dependencies": [
+        "EPIC-000"
+      ],
+      "deliverables": [
+        "Vitest",
+        "Playwright",
+        "Supabase RLS tests",
+        "CI"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "implemented_pending_external_ci_confirmation"
+    },
+    {
+      "id": "EPIC-002",
+      "name": "Auth MFA memberships",
+      "dependencies": [
+        "EPIC-001"
+      ],
+      "deliverables": [
+        "invites",
+        "AAL2",
+        "roles",
+        "offboarding",
+        "session revocation"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-003",
+      "name": "Audit and request correlation",
+      "dependencies": [
+        "EPIC-001"
+      ],
+      "deliverables": [
+        "audit service",
+        "request IDs",
+        "audit viewer"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-010",
+      "name": "Contact and organization CRM",
+      "dependencies": [
+        "EPIC-001",
+        "EPIC-002",
+        "EPIC-003"
+      ],
+      "deliverables": [
+        "CRUD",
+        "aliases",
+        "relationships",
+        "duplicates",
+        "merge"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-011",
+      "name": "Structured intake",
+      "dependencies": [
+        "EPIC-010"
+      ],
+      "deliverables": [
+        "intake workflow",
+        "parties",
+        "triage"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-012",
+      "name": "Conflict checking",
+      "dependencies": [
+        "EPIC-010",
+        "EPIC-011"
+      ],
+      "deliverables": [
+        "search",
+        "candidates",
+        "lawyer decision"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-013",
+      "name": "Engagement and matter opening",
+      "dependencies": [
+        "EPIC-012"
+      ],
+      "deliverables": [
+        "engagement",
+        "opening checklist",
+        "atomic conversion",
+        "numbering"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-014",
+      "name": "Matter workspace",
+      "dependencies": [
+        "EPIC-013"
+      ],
+      "deliverables": [
+        "overview",
+        "parties",
+        "team",
+        "chronology",
+        "notes"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-015",
+      "name": "Tasks and concurrency",
+      "dependencies": [
+        "EPIC-014"
+      ],
+      "deliverables": [
+        "task CRUD",
+        "dependencies",
+        "row version"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-020",
+      "name": "Deadlines and reminders",
+      "dependencies": [
+        "EPIC-014",
+        "EPIC-015"
+      ],
+      "deliverables": [
+        "deadlines",
+        "revision",
+        "reminders",
+        "escalation"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-021",
+      "name": "Calendar integration",
+      "dependencies": [
+        "EPIC-020"
+      ],
+      "deliverables": [
+        "provider abstraction",
+        "sync",
+        "conflict queue"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-022",
+      "name": "Private document vault",
+      "dependencies": [
+        "EPIC-014",
+        "EPIC-003"
+      ],
+      "deliverables": [
+        "upload",
+        "quarantine",
+        "versions",
+        "signed URLs"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-023",
+      "name": "Document review templates generation",
+      "dependencies": [
+        "EPIC-022"
+      ],
+      "deliverables": [
+        "approvals",
+        "templates",
+        "generation"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-024",
+      "name": "Evidence chain of custody",
+      "dependencies": [
+        "EPIC-022"
+      ],
+      "deliverables": [
+        "evidence",
+        "hashes",
+        "custody events"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-025",
+      "name": "E-signature",
+      "dependencies": [
+        "EPIC-023"
+      ],
+      "deliverables": [
+        "approved provider",
+        "webhooks",
+        "executed version"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-030",
+      "name": "Portal identity",
+      "dependencies": [
+        "EPIC-002",
+        "EPIC-014"
+      ],
+      "deliverables": [
+        "portal users",
+        "invitations",
+        "revocation",
+        "RLS"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-031",
+      "name": "Portal sharing",
+      "dependencies": [
+        "EPIC-022",
+        "EPIC-030"
+      ],
+      "deliverables": [
+        "explicit shares",
+        "acknowledgment"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-032",
+      "name": "Secure messaging and client requests",
+      "dependencies": [
+        "EPIC-030",
+        "EPIC-031"
+      ],
+      "deliverables": [
+        "threads",
+        "messages",
+        "requests",
+        "quarantine"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-033",
+      "name": "Portal appointments",
+      "dependencies": [
+        "EPIC-020",
+        "EPIC-030"
+      ],
+      "deliverables": [
+        "event sharing",
+        "confirmation",
+        "history"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-040",
+      "name": "Billing arrangements and rates",
+      "dependencies": [
+        "EPIC-014"
+      ],
+      "deliverables": [
+        "arrangements",
+        "rate versions",
+        "approvals"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-041",
+      "name": "Time and expenses",
+      "dependencies": [
+        "EPIC-040",
+        "EPIC-022"
+      ],
+      "deliverables": [
+        "entries",
+        "approval",
+        "receipts"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-042",
+      "name": "Retainer ledger",
+      "dependencies": [
+        "EPIC-040"
+      ],
+      "deliverables": [
+        "append-only ledger",
+        "balance"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-043",
+      "name": "Invoicing",
+      "dependencies": [
+        "EPIC-041",
+        "EPIC-042"
+      ],
+      "deliverables": [
+        "invoice lifecycle",
+        "immutable issue",
+        "credit notes"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-044",
+      "name": "Payments and receipts",
+      "dependencies": [
+        "EPIC-043"
+      ],
+      "deliverables": [
+        "manual reconciliation",
+        "payments",
+        "receipts"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-045",
+      "name": "Reports",
+      "dependencies": [
+        "EPIC-020",
+        "EPIC-043",
+        "EPIC-044"
+      ],
+      "deliverables": [
+        "operational reports",
+        "financial reports"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-050",
+      "name": "Retention and legal hold",
+      "dependencies": [
+        "EPIC-022",
+        "EPIC-014"
+      ],
+      "deliverables": [
+        "retention",
+        "holds",
+        "disposition"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-051",
+      "name": "Exports and privacy requests",
+      "dependencies": [
+        "EPIC-003",
+        "EPIC-050"
+      ],
+      "deliverables": [
+        "export jobs",
+        "approvals",
+        "privacy workflows"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-052",
+      "name": "Operational security",
+      "dependencies": [
+        "EPIC-002",
+        "EPIC-003"
+      ],
+      "deliverables": [
+        "incidents",
+        "sessions",
+        "health",
+        "backups"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-053",
+      "name": "AI infrastructure and gate",
+      "dependencies": [
+        "EPIC-022",
+        "EPIC-003",
+        "EPIC-052"
+      ],
+      "deliverables": [
+        "kill switch",
+        "matter retrieval",
+        "audit",
+        "human review"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-054",
+      "name": "Approved AI use cases",
+      "dependencies": [
+        "EPIC-053"
+      ],
+      "deliverables": [
+        "one use case at a time",
+        "evaluation"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-060",
+      "name": "Public content verification and launch",
+      "dependencies": [
+        "EPIC-001",
+        "EPIC-002"
+      ],
+      "deliverables": [
+        "verified content",
+        "public launch"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-061",
+      "name": "Data import tooling",
+      "dependencies": [
+        "EPIC-010",
+        "EPIC-013",
+        "EPIC-022"
+      ],
+      "deliverables": [
+        "mapping",
+        "staging",
+        "dedupe",
+        "reconciliation"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-062",
+      "name": "Security and recovery validation",
+      "dependencies": [
+        "EPIC-050",
+        "EPIC-051",
+        "EPIC-052"
+      ],
+      "deliverables": [
+        "restore drill",
+        "penetration test",
+        "incident exercise"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    },
+    {
+      "id": "EPIC-063",
+      "name": "Production cutover",
+      "dependencies": [
+        "EPIC-060",
+        "EPIC-061",
+        "EPIC-062"
+      ],
+      "deliverables": [
+        "environment",
+        "training",
+        "monitoring",
+        "rollback"
+      ],
+      "acceptance": "docs/22_EPIC_ACCEPTANCE_CRITERIA.md",
+      "status": "planned"
+    }
+  ],
+  "state_machines": "docs/23_STATE_MACHINES_AND_NUMBERING.md",
+  "configuration": "docs/24_CONFIGURATION_CATALOG.md",
+  "release_checklists": "docs/25_RELEASE_CHECKLISTS.md",
+  "verification": {
+    "local_passed": [
+      "lint",
+      "strict_typecheck",
+      "vitest_8_tests",
+      "next_production_build"
+    ],
+    "external_ci_required": [
+      "supabase_pgtap_rls",
+      "playwright_chromium"
+    ],
+    "next_epic_blocked_until": "EPIC-001 GitHub CI is fully green"
+  }
+}

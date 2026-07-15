@@ -33,3 +33,32 @@ Add the production and preview callback URLs in Supabase Auth settings:
 - Approved Vercel preview patterns, if previews require authentication testing
 
 Do not enable ISR or shared caching for authenticated pages.
+
+
+## Local test stack
+
+Install dependencies and the Playwright browser:
+
+```bash
+npm ci
+npm run test:e2e:install
+```
+
+Run application-level gates:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run build
+```
+
+RLS/database tests require Docker and the Supabase local stack:
+
+```bash
+npm run supabase:start
+npm run test:rls
+npm run supabase:stop
+```
+
+The pgtap fixtures are synthetic. Never import a production dump or live client records into the local test stack.
