@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "npm ci --ignore-scripts --no-audit --no-fund",
+  "installCommand": "npx --yes yarn@1.22.22 install --ignore-scripts --no-lockfile --non-interactive",
   "buildCommand": "npm run build"
 }
