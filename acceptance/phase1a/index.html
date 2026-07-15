@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BatallaOS Phase 1A Acceptance Harness</title>
+  <style>
+    :root {
+      --ink: #171717;
+      --paper: #f8f5ed;
+      --panel: #ffffff;
+      --line: #cbc3b2;
+      --gold: #9a6b19;
+      --danger: #8a1c1c;
+      --warning: #8a5a00;
+      --success: #1d6b3b;
+      --muted: #645f55;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--ink); background: var(--paper); }
+    button, select, textarea, input { font: inherit; }
+    button { min-height: 48px; cursor: pointer; }
+    .app { min-height: 100vh; }
+    .banner { background: #2c1700; color: #fff8e8; padding: 12px 20px; text-align: center; font-weight: 800; letter-spacing: .04em; }
+    header { background: #111; color: #fff; padding: 22px 28px; border-bottom: 4px solid var(--gold); }
+    header h1 { margin: 0; font-family: Georgia, serif; font-size: 30px; }
+    header p { margin: 8px 0 0; color: #ddd; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; padding: 18px 28px; background: #efe9dc; border-bottom: 1px solid var(--line); }
+    .role-button, .tab-button { border: 1px solid #4a443a; background: #fff; padding: 10px 18px; font-weight: 800; border-radius: 6px; }
+    .role-button.active, .tab-button.active { background: #171717; color: white; }
+    main { padding: 28px; max-width: 1500px; margin: 0 auto; }
+    .status-strip { border: 2px solid var(--warning); background: #fff7df; padding: 20px; border-radius: 8px; margin-bottom: 24px; }
+    .status-strip strong { font-size: 22px; }
+    .grid { display: grid; gap: 20px; }
+    .four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 22px; box-shadow: 0 8px 30px rgba(0,0,0,.04); }
+    .card h2, .card h3 { margin-top: 0; }
+    .metric { font-size: 40px; font-weight: 900; margin: 16px 0 8px; }
+    .muted { color: var(--muted); line-height: 1.55; }
+    .queue-item { border: 1px solid var(--line); border-left: 6px solid var(--gold); background: white; border-radius: 6px; padding: 18px; margin-top: 14px; }
+    .queue-item.critical { border-left-color: var(--danger); }
+    .queue-item.warning { border-left-color: var(--warning); }
+    .queue-item h3 { margin: 0 0 8px; font-size: 21px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 14px; }
+    .tag { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; background: #f4f0e7; }
+    .action { display: inline-flex; align-items: center; justify-content: center; margin-top: 14px; padding: 12px 18px; background: #171717; color: white; border: 0; border-radius: 6px; font-weight: 800; }
+    .action.secondary { color: var(--ink); background: white; border: 1px solid #4a443a; }
+    .action.danger { background: var(--danger); }
+    .action:disabled { background: #bbb; color: #555; cursor: not-allowed; }
+    .hidden { display: none !important; }
+    .section-title { margin: 32px 0 14px; font-size: 28px; font-family: Georgia, serif; }
+    .notice { padding: 16px; border-radius: 6px; border: 1px solid var(--line); background: #f8f8f8; margin-top: 16px; line-height: 1.5; }
+    .notice.danger { border-color: #c47b7b; background: #fff0f0; color: #631010; }
+    .notice.success { border-color: #72a584; background: #effaf2; color: #174c2b; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 12px 10px; vertical-align: top; }
+    th { background: #f1ede5; }
+    label { display: block; font-weight: 800; margin: 14px 0 7px; }
+    textarea, input, select { width: 100%; min-height: 46px; border: 1px solid #766f61; border-radius: 5px; padding: 10px 12px; background: white; }
+    textarea { min-height: 110px; resize: vertical; }
+    .packet { background: white; padding: 30px; border: 1px solid #aaa; }
+    .packet h1 { font-family: Georgia, serif; margin: 0 0 6px; }
+    .packet h2 { border-bottom: 2px solid #222; padding-bottom: 6px; margin-top: 28px; }
+    .packet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+    .packet-row strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #555; margin-bottom: 4px; }
+    .role-only { display: none; }
+    body[data-role="secretary"] .role-secretary,
+    body[data-role="lawyer"] .role-lawyer,
+    body[data-role="admin"] .role-admin { display: block; }
+    .role-summary { font-weight: 900; }
+    .footer-note { margin: 26px 0 0; color: var(--muted); font-size: 13px; }
+    @media (max-width: 1000px) {
+      .four, .two { grid-template-columns: 1fr; }
+      main { padding: 18px; }
+      .packet-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; }
+      .banner, header, .toolbar, .status-strip, .screen-only, .tab-screen:not(#packet) { display: none !important; }
+      main { max-width: none; padding: 0; }
+      #packet { display: block !important; }
+      .packet { border: 0; padding: 0; }
+      @page { size: A4 portrait; margin: 15mm; }
+      h2, h3 { break-after: avoid; }
+      table, .queue-item { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body data-role="secretary">
+<div class="app">
+  <div class="banner">SYNTHETIC ACCEPTANCE HARNESS — NO LIVE DATABASE — NO REAL CLIENT DATA</div>
+  <header>
+    <h1>BatallaOS Phase 1A Office Simulator</h1>
+    <p>Zero-cost visual, role and print acceptance. Database authorization remains independently verified in GitHub CI.</p>
+  </header>
+
+  <div class="toolbar screen-only">
+    <strong style="align-self:center">View as:</strong>
+    <button class="role-button active" data-role="secretary">Secretary</button>
+    <button class="role-button" data-role="lawyer">Lawyer</button>
+    <button class="role-button" data-role="admin">Technical Admin</button>
+    <span style="width:16px"></span>
+    <strong style="align-self:center">Screen:</strong>
+    <button class="tab-button active" data-tab="command">Command Center</button>
+    <button class="tab-button" data-tab="inquiry">Inquiry Review</button>
+    <button class="tab-button" data-tab="packet">Printable Packet</button>
+  </div>
+
+  <main>
+    <div class="status-strip screen-only">
+      <strong id="roleTitle">Secretary view: preparation, follow-up and scheduling</strong>
+      <div class="muted" id="roleDescription">The secretary can prepare intake, add parties, run the search and schedule only after lawyer clearance. Lawyer decisions are not available here.</div>
+    </div>
+
+    <section id="command" class="tab-screen">
+      <div class="grid four">
+        <article class="card">
+          <h2>What needs a lawyer?</h2>
+          <div class="metric">1</div>
+          <p class="muted">One conflict search has warnings waiting for a written lawyer review.</p>
+        </article>
+        <article class="card">
+          <h2>Which client is waiting?</h2>
+          <div class="metric">1</div>
+          <p class="muted">Synthetic prospect needs party review and conflict clearance.</p>
+        </article>
+        <article class="card">
+          <h2>Urgent work</h2>
+          <div class="metric">1</div>
+          <p class="muted">Synthetic urgent task is due within seven days.</p>
+        </article>
+        <article class="card">
+          <h2>Upcoming consultation</h2>
+          <div class="metric">1</div>
+          <p class="muted">A confirmed synthetic consultation is shown in Philippine time.</p>
+        </article>
+      </div>
+
+      <h2 class="section-title">Direct work queues</h2>
+      <div class="grid two">
+        <article class="card">
+          <h2>Lawyer decision queue</h2>
+          <div class="queue-item warning">
+            <h3>Maria Santos v. Santos Holdings, Inc.</h3>
+            <div class="meta">
+              <span><b>Office ref:</b> BAT-I-2026-000901</span>
+              <span><b>Warnings:</b> 2</span>
+              <span><b>Stage:</b> Conflict review</span>
+            </div>
+            <p class="muted">Exact normalized match against an existing contact alias and historical matter party.</p>
+            <button class="action" data-open-inquiry>Open legal review</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Staff intake queue</h2>
+          <div class="queue-item critical">
+            <h3>Maria Santos</h3>
+            <div class="meta">
+              <span><b>Urgency:</b> Critical</span>
+              <span><b>Subject:</b> Contract and collection dispute</span>
+              <span><b>Owner:</b> Synthetic Secretary</span>
+            </div>
+            <p class="muted">Next action: confirm every opposing party and related organization before the lawyer decides.</p>
+            <button class="action" data-open-inquiry>Open intake</button>
+          </div>
+        </article>
+      </div>
+
+      <article class="card" style="margin-top:20px">
+        <h2>Consultations within seven days</h2>
+        <div class="queue-item">
+          <h3>Juan Dela Cruz</h3>
+          <div class="meta">
+            <span><b>Date:</b> July 20, 2026</span>
+            <span><b>Time:</b> 10:00 AM–11:00 AM Asia/Manila</span>
+            <span><b>Lawyer:</b> Synthetic Associate</span>
+            <span><b>Mode:</b> Office</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="inquiry" class="tab-screen hidden">
+      <div class="grid two">
+        <article class="card">
+          <h2>Original public submission</h2>
+          <span class="tag">Immutable</span>
+          <table>
+            <tr><th>Public reference</th><td>INQ-7D4A92B81C30</td></tr>
+            <tr><th>Internal reference</th><td>BAT-I-2026-000901</td></tr>
+            <tr><th>Name</th><td>Maria Santos</td></tr>
+            <tr><th>Email</th><td>maria.santos@phase1a.example.test</td></tr>
+            <tr><th>Subject</th><td>Contract and collection dispute</td></tr>
+            <tr><th>Summary</th><td>A synthetic supplier dispute involving Santos Holdings, Inc. and related representatives. No real facts or parties are used.</td></tr>
+          </table>
+        </article>
+
+        <article class="card">
+          <h2>Structured intake</h2>
+          <table>
+            <tr><th>Urgency</th><td>Critical</td></tr>
+            <tr><th>Jurisdiction</th><td>Muntinlupa City, Philippines</td></tr>
+            <tr><th>Missing information</th><td>Confirm corporate representative and related trade name.</td></tr>
+            <tr><th>Owner</th><td>Synthetic Secretary</td></tr>
+            <tr><th>Stage</th><td id="stageValue">Conflict review</td></tr>
+          </table>
+        </article>
+      </div>
+
+      <h2 class="section-title">Recorded parties</h2>
+      <article class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Type</th><th>Role</th><th>Adverse</th><th>Aliases / relationship</th></tr></thead>
+          <tbody>
+            <tr><td>Maria Santos</td><td>Person</td><td>Prospective client</td><td>No</td><td>Maria L. Santos</td></tr>
+            <tr><td>Santos Holdings, Inc.</td><td>Organization</td><td>Opposing party</td><td>Yes</td><td>Santos Trading; alleged contracting counterparty</td></tr>
+            <tr><td>Pedro Reyes</td><td>Person</td><td>Corporate representative</td><td>Yes</td><td>Authorized signatory</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <h2 class="section-title">Conflict warnings</h2>
+      <article class="card">
+        <div class="notice danger"><b>Warning only:</b> The automated search found possible matches. It does not decide whether a legal conflict exists.</div>
+        <div class="queue-item warning">
+          <h3>Santos Holdings, Inc.</h3>
+          <p><b>Match source:</b> Existing contact alias</p>
+          <p><b>Reason:</b> Exact normalized name matches alias “Santos Trading.”</p>
+          <p><b>Review:</b> <span id="candidateOne">Unreviewed</span></p>
+        </div>
+        <div class="queue-item warning">
+          <h3>Pedro Reyes</h3>
+          <p><b>Match source:</b> Historical matter party</p>
+          <p><b>Reason:</b> Exact normalized name appears on a prior matter.</p>
+          <p><b>Review:</b> <span id="candidateTwo">Unreviewed</span></p>
+        </div>
+      </article>
+
+      <article class="card role-only role-secretary" style="margin-top:20px">
+        <h2>Secretary actions</h2>
+        <p class="role-summary">Prepare information. Do not make the legal decision.</p>
+        <button class="action secondary" id="rerunSearch">Run conflict search again</button>
+        <div class="notice">Scheduling remains locked until a lawyer records cleared or conditional clearance.</div>
+        <button class="action" id="secretarySchedule" disabled>Schedule consultation</button>
+      </article>
+
+      <article class="card role-only role-lawyer" style="margin-top:20px">
+        <h2>Lawyer review and decision</h2>
+        <label for="finding">Candidate finding</label>
+        <select id="finding"><option>Not relevant</option><option>Potential</option><option>Confirmed</option><option>Needs more information</option></select>
+        <label for="reason">Written reason</label>
+        <textarea id="reason">Synthetic review: names match, but the source record concerns a different entity and representation.</textarea>
+        <button class="action" id="reviewWarnings">Review both warnings</button>
+        <label for="decision">Overall decision</label>
+        <select id="decision"><option>Cleared</option><option>Conditional</option><option>Conflicted</option><option>Deferred</option></select>
+        <label for="decisionReason">Written reasoning</label>
+        <textarea id="decisionReason">Synthetic acceptance reasoning. All warnings were reviewed by an authorized lawyer role before disposition.</textarea>
+        <button class="action" id="recordDecision" disabled>Record permanent lawyer decision</button>
+        <div id="lawyerResult" class="notice hidden"></div>
+      </article>
+
+      <article class="card role-only role-admin" style="margin-top:20px">
+        <h2>Technical administrator boundary</h2>
+        <div class="notice danger"><b>Access correctly denied:</b> Technical administration does not grant authority to review conflict candidates or record the lawyer decision.</div>
+        <p class="muted">The administrator may manage technology and membership settings elsewhere, but no legal decision controls are rendered on this screen.</p>
+      </article>
+
+      <article class="card" style="margin-top:20px">
+        <h2>Consultation scheduling</h2>
+        <div id="scheduleGate" class="notice danger">Locked: conflict clearance is required before scheduling.</div>
+        <div class="grid two">
+          <div><label>Assigned lawyer</label><select><option>Synthetic Associate</option><option>Synthetic Partner</option></select></div>
+          <div><label>Method</label><select><option>Office</option><option>Video</option><option>Phone</option></select></div>
+          <div><label>Start</label><input value="2026-07-21 14:00 Asia/Manila" /></div>
+          <div><label>End</label><input value="2026-07-21 15:00 Asia/Manila" /></div>
+        </div>
+        <button class="action" id="scheduleButton" disabled>Reserve consultation time</button>
+        <div id="scheduleResult" class="notice hidden"></div>
+      </article>
+    </section>
+
+    <section id="packet" class="tab-screen hidden">
+      <article class="packet">
+        <h1>Batalla & Associates</h1>
+        <p><b>Phase 1A Intake / Conflict / Consultation Packet</b></p>
+        <p><b>SYNTHETIC ACCEPTANCE RECORD — NOT A REAL CLIENT FILE</b></p>
+        <div class="packet-grid">
+          <div class="packet-row"><strong>Internal reference</strong>BAT-I-2026-000901</div>
+          <div class="packet-row"><strong>Public reference</strong>INQ-7D4A92B81C30</div>
+          <div class="packet-row"><strong>Prospective client</strong>Maria Santos</div>
+          <div class="packet-row"><strong>Urgency</strong>Critical</div>
+          <div class="packet-row"><strong>Jurisdiction</strong>Muntinlupa City, Philippines</div>
+          <div class="packet-row"><strong>Owner</strong>Synthetic Secretary</div>
+        </div>
+
+        <h2>Original submission</h2>
+        <p>A synthetic supplier dispute involving Santos Holdings, Inc. and related representatives. This packet contains no real client facts, privileged communications or production data.</p>
+
+        <h2>Parties and related names</h2>
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Adverse</th><th>Aliases / note</th></tr></thead>
+          <tbody>
+            <tr><td>Maria Santos</td><td>Prospective client</td><td>No</td><td>Maria L. Santos</td></tr>
+            <tr><td>Santos Holdings, Inc.</td><td>Opposing party</td><td>Yes</td><td>Santos Trading</td></tr>
+            <tr><td>Pedro Reyes</td><td>Corporate representative</td><td>Yes</td><td>Authorized signatory</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Conflict search warnings</h2>
+        <ol>
+          <li><b>Santos Holdings, Inc.</b> — exact normalized alias match against an existing contact.</li>
+          <li><b>Pedro Reyes</b> — exact normalized match against a historical matter party.</li>
+        </ol>
+        <p><b>Safety statement:</b> Search results are warnings only. A lawyer must review and decide.</p>
+
+        <h2>Lawyer decision history</h2>
+        <table>
+          <thead><tr><th>Version</th><th>Disposition</th><th>Reasoning</th><th>Reviewer</th><th>Time</th></tr></thead>
+          <tbody><tr><td>1</td><td>Cleared</td><td>All synthetic warnings reviewed and found not relevant to the proposed engagement.</td><td>Synthetic Associate</td><td>July 16, 2026, 10:30 AM Asia/Manila</td></tr></tbody>
+        </table>
+
+        <h2>Consultation</h2>
+        <div class="packet-grid">
+          <div class="packet-row"><strong>Status</strong>Confirmed</div>
+          <div class="packet-row"><strong>Assigned lawyer</strong>Synthetic Associate</div>
+          <div class="packet-row"><strong>Date and time</strong>July 21, 2026, 2:00 PM–3:00 PM</div>
+          <div class="packet-row"><strong>Time zone</strong>Asia/Manila</div>
+          <div class="packet-row"><strong>Method</strong>Office</div>
+          <div class="packet-row"><strong>Printed</strong><span id="printedAt"></span></div>
+        </div>
+
+        <p class="footer-note">Generated solely for BatallaOS whole-office and A4 print acceptance. This static harness does not assert live end-to-end deployment; database security and authorization are validated separately by the Phase 1A GitHub CI suites.</p>
+      </article>
+      <button class="action screen-only" onclick="window.print()">Print / Save as A4 PDF</button>
+    </section>
+  </main>
+</div>
+<script>
+  const roleCopy = {
+    secretary: ['Secretary view: preparation, follow-up and scheduling', 'The secretary can prepare intake, add parties, run the search and schedule only after lawyer clearance. Lawyer decisions are not available here.'],
+    lawyer: ['Lawyer view: review warnings and record the legal decision', 'Only lawyer-position roles receive the conflict-review controls. Written reasons are required and the decision is treated as permanent.'],
+    admin: ['Technical admin view: technology authority without legal authority', 'Technical administrators do not receive candidate-review or conflict-decision controls. This separation is deliberate.']
+  };
+  function setRole(role) {
+    document.body.dataset.role = role;
+    document.querySelectorAll('.role-button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+    document.getElementById('roleTitle').textContent = roleCopy[role][0];
+    document.getElementById('roleDescription').textContent = roleCopy[role][1];
+  }
+  function setTab(tab) {
+    document.querySelectorAll('.tab-screen').forEach(s => s.classList.toggle('hidden', s.id !== tab));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  }
+  document.querySelectorAll('.role-button').forEach(b => b.addEventListener('click', () => setRole(b.dataset.role)));
+  document.querySelectorAll('.tab-button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  document.querySelectorAll('[data-open-inquiry]').forEach(b => b.addEventListener('click', () => setTab('inquiry')));
+  document.getElementById('printedAt').textContent = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' });
+  document.getElementById('rerunSearch').addEventListener('click', () => alert('Synthetic search rerun. No live database call was made.'));
+  document.getElementById('reviewWarnings').addEventListener('click', () => {
+    document.getElementById('candidateOne').textContent = 'Not relevant — reviewed by Synthetic Associate';
+    document.getElementById('candidateTwo').textContent = 'Not relevant — reviewed by Synthetic Associate';
+    document.getElementById('recordDecision').disabled = false;
+  });
+  document.getElementById('recordDecision').addEventListener('click', () => {
+    const result = document.getElementById('lawyerResult');
+    result.className = 'notice success';
+    result.textContent = 'Cleared decision recorded in the simulator. In the real implementation this is append-only and database-audited.';
+    document.getElementById('stageValue').textContent = 'Cleared';
+    document.getElementById('scheduleGate').className = 'notice success';
+    document.getElementById('scheduleGate').textContent = 'Clearance recorded. Staff may schedule a consultation.';
+    document.getElementById('scheduleButton').disabled = false;
+    document.getElementById('secretarySchedule').disabled = false;
+  });
+  document.getElementById('scheduleButton').addEventListener('click', () => {
+    const result = document.getElementById('scheduleResult');
+    result.className = 'notice success';
+    result.textContent = 'Synthetic consultation reserved. A duplicate overlapping slot would be rejected by the PostgreSQL constraint in the real workflow.';
+  });
+  document.getElementById('secretarySchedule').addEventListener('click', () => document.getElementById('scheduleButton').click());
+  const params = new URLSearchParams(location.search);
+  if (params.get('role')) setRole(params.get('role'));
+  if (params.get('tab')) setTab(params.get('tab'));
+</script>
+</body>
+</html>
