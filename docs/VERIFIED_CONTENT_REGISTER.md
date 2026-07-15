@@ -1,25 +1,27 @@
-# Verified Content Register
+# Verified Public Content Register
 
-## Known and permitted
+Nothing in this file is automatically verified. A row becomes publishable only when `Status` is **Approved**, a source is recorded, and an authorized approver/date are present.
 
-- Public name: Batalla & Associates
-- Product direction: public law-office website plus secure administrative system
-- Required controls: consent, conflict-check language, private storage, RLS, roles, audit logs, administrator MFA, signed URLs, and backups
+| Content | Status | Approved value/source | Approver/date |
+|---|---|---|---|
+| Firm public name styling | Needs verification | — | — |
+| Attorney name/title | Needs verification | — | — |
+| IBP details | Needs verification | — | — |
+| PTR details | Needs verification | — | — |
+| MCLE details | Needs verification | — | — |
+| Office address | Needs verification | — | — |
+| Phone numbers | Needs verification | — | — |
+| Public email | Needs verification | — | — |
+| Practice areas | Needs verification | — | — |
+| Fee language | Needs verification | — | — |
+| Attorney portrait | Needs approval/licensing | — | — |
+| Office photography | Needs approval/licensing | — | — |
+| Logo | Needs approval/rights | — | — |
+| Testimonials | Disabled pending policy/approval | — | — |
+| Case results | Disabled pending policy/approval | — | — |
+| Privacy notice | Legal review required | — | — |
+| Disclaimer | Legal review required | — | — |
+| Intake consent | Legal/privacy review required | — | — |
+| Client portal terms | Legal/privacy review required | — | — |
 
-## Blocked until the firm verifies them
-
-- Exact attorney name and biography
-- Supreme Court or IBP profile details
-- IBP number
-- PTR details
-- MCLE details
-- Business address
-- Telephone numbers and public email addresses
-- Practice areas
-- Fees
-- Results, rankings, comparisons, or guarantees
-- Testimonials and permission to publish them
-- Attorney and office photographs
-- Logo ownership and final brand assets
-
-Publishing workflow must record who verified each item, the evidence used, the approval date, and who published it.
+CMS publishing must verify this register or an equivalent database approval record. Draft placeholders cannot be treated as fact.

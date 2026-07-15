@@ -16,7 +16,7 @@ export const inquirySchema = z.object({
   subject: z.string().trim().min(3).max(200),
   message: z.string().trim().min(20).max(5000),
   consent: z.literal(true),
-  website: z.string().max(0).optional(),
+  website: z.string().max(200).optional().default(''),
 });
 
 export const consultationSchema = z.object({
@@ -34,5 +34,5 @@ export const consultationSchema = z.object({
     .optional()
     .transform((value) => value || null),
   consent: z.literal(true),
-  website: z.string().max(0).optional(),
+  website: z.string().max(200).optional().default(''),
 });

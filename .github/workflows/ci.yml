@@ -8,17 +8,60 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
+    name: Lint, unit tests, build, strict types
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - name: Import and install locked dependencies
+        run: |
+          npx --yes pnpm@10.13.1 import
+          npx --yes pnpm@10.13.1 install --frozen-lockfile --ignore-scripts
       - run: npm run lint
-      - run: npm run typecheck
+      - run: npm run test:unit
       - run: npm run build
+      - run: npm run typecheck
+
+  database:
+    name: Supabase migrations and RLS tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+      - name: Start local Supabase
+        run: supabase start
+      - name: Run database and RLS tests
+        run: supabase test db
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
+
+  browser:
+    name: Playwright public smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Import and install locked dependencies
+        run: |
+          npx --yes pnpm@10.13.1 import
+          npx --yes pnpm@10.13.1 install --frozen-lockfile --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_FIRM_SLUG: batalla-associates

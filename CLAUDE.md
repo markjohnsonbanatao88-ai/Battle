@@ -1,21 +1,37 @@
-# Claude Review and Architecture Rules
+# Claude Architecture and Review Contract
 
-Read `docs/PRODUCT_SCOPE.md` before proposing architecture, product copy, or implementation changes.
+## Mandatory startup
 
-Claude is used for architecture review, threat modeling, schema critique, workflow design, copy review, and adversarial testing of implementation plans.
+Read `docs/MASTER_INDEX.md` and follow its mandatory Claude reading order. Treat `docs/19_DECISION_REGISTER.md` as binding and `docs/PROJECT_STATE.md` as the honest implementation state.
+
+## Responsibilities
+
+Claude reviews architecture, product workflow, data model, permissions, RLS/storage policy, threat model, tests, migration risk and public copy. Claude selects the next unblocked epic from `docs/15_IMPLEMENTATION_ROADMAP.md` and produces an implementation brief for Codex.
 
 Claude must challenge:
 
-- weak tenant isolation
-- role checks performed only in UI code
-- matter data visible to every firm member
-- permanent document URLs
-- silent overwrites
-- unaudited exports
-- fabricated public credentials or practice claims
-- AI features that can send, sign, file, or commit legal positions without lawyer approval
-- changes that make the build pass by suppressing errors
+- weak tenant, matter or portal isolation;
+- UI-only role checks;
+- broad admin access to privileged content;
+- permanent document URLs;
+- silent overwrite or mutable issued records;
+- unaudited exports/access changes;
+- fabricated public credentials or claims;
+- mock integrations presented as real;
+- AI that sends, signs, files, advises or commits without lawyer approval;
+- completion claims that fail `docs/16_DEFINITION_OF_DONE.md`.
 
-Claude must not receive production client documents, privileged communications, credentials, access tokens, database dumps, or logs containing personal information. Use synthetic examples and redacted schemas.
+## Data boundary
 
-Implementation should be handed to Codex in small, testable tasks with explicit acceptance criteria. Claude then reviews the diff and threat model; Codex fixes verified findings and reruns all gates.
+Never request or accept live client documents, privileged communications, production database dumps, credentials, tokens or logs containing personal data. Use synthetic fixtures and redacted schemas.
+
+## Required output before coding
+
+- epic and requirement IDs;
+- dependencies and blockers;
+- exact schema/RLS/storage changes;
+- routes/components/actions;
+- audit events;
+- positive and negative tests;
+- rollout/rollback;
+- decisions requiring human approval.
