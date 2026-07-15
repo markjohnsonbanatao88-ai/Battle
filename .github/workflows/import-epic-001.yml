@@ -47,19 +47,15 @@ jobs:
           gunzip -c /tmp/epic.patch.gz > /tmp/epic.patch
           echo "4982f1a471163017d85fea7baf14d90abacb29ea640e75bc87348bdd041fe90e  /tmp/epic.patch" | sha256sum -c -
 
-      - name: Apply verified patch with three-way merge
+      - name: Build and validate target tree
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          current_branch="epic-001/test-infrastructure"
           git checkout -B imported aa1b53ebc3471562a47c8a64d0bf805deb061ab0
           git apply --index --3way /tmp/epic.patch
-
-      - name: Validate imported repository
-        shell: bash
-        run: |
-          set -euo pipefail
           test -f package.json
           test -f package-lock.json
           test -f vitest.config.ts
@@ -68,10 +64,22 @@ jobs:
           test -f supabase/tests/001_rls_isolation.test.sql
           test -d src
           git diff --cached --check
+          git commit -m "test: establish EPIC-001 quality and RLS gates"
+          target_commit="$(git rev-parse HEAD)"
+          echo "$target_commit" > /tmp/target-commit
+          git checkout "$current_branch"
 
-      - name: Publish complete branch
+      - name: Commit complete repository on branch
         shell: bash
         run: |
           set -euo pipefail
+          target_commit="$(cat /tmp/target-commit)"
+          git read-tree --reset -u "$target_commit"
+          git status --short
           git commit -m "test: establish EPIC-001 quality and RLS gates"
-          git push --force origin imported:epic-001/test-infrastructure
+
+      - name: Push complete branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:epic-001/test-infrastructure
