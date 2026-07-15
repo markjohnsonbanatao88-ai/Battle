@@ -5,13 +5,13 @@ on:
     branches:
       - epic-001/test-infrastructure
     paths:
-      - '.github/import/**'
+      - '.github/import/chunk-*.txt'
       - '.github/workflows/import-epic-001.yml'
   pull_request:
     branches:
       - main
     paths:
-      - '.github/import/**'
+      - '.github/import/chunk-*.txt'
       - '.github/workflows/import-epic-001.yml'
 
 permissions:
@@ -23,12 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: epic-001/test-infrastructure
           fetch-depth: 0
-          show-progress: false
 
       - name: Reconstruct and verify patch
         shell: bash
         run: |
+          set -euo pipefail
           parts=(
             .github/import/chunk-000.txt
             .github/import/chunk-001.txt
@@ -46,12 +47,31 @@ jobs:
           gunzip -c /tmp/epic.patch.gz > /tmp/epic.patch
           echo "4982f1a471163017d85fea7baf14d90abacb29ea640e75bc87348bdd041fe90e  /tmp/epic.patch" | sha256sum -c -
 
-      - name: Apply snapshot
+      - name: Apply verified patch with three-way merge
         shell: bash
         run: |
-          git config user.name "OpenAI Codex"
-          git config user.email "noreply@openai.com"
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B imported aa1b53ebc3471562a47c8a64d0bf805deb061ab0
-          git apply --index /tmp/epic.patch
+          git apply --index --3way /tmp/epic.patch
+
+      - name: Validate imported repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f package.json
+          test -f package-lock.json
+          test -f vitest.config.ts
+          test -f playwright.config.ts
+          test -f docs/26_TEST_INFRASTRUCTURE.md
+          test -f supabase/tests/001_rls_isolation.test.sql
+          test -d src
+          git diff --cached --check
+
+      - name: Publish complete branch
+        shell: bash
+        run: |
+          set -euo pipefail
           git commit -m "test: establish EPIC-001 quality and RLS gates"
           git push --force origin imported:epic-001/test-infrastructure
