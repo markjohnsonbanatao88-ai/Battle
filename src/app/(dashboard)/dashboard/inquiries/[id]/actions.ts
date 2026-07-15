@@ -16,7 +16,7 @@ const staffRoles: MembershipRole[] = [
   'paralegal',
   'legal_secretary',
 ];
-const lawyerRoles: MembershipRole[] = ['firm_admin', 'managing_partner', 'partner', 'associate'];
+const lawyerRoles: MembershipRole[] = ['managing_partner', 'partner', 'associate'];
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -37,20 +37,15 @@ function safeDatabaseMessage(message: string) {
     'Every conflict candidate must be reviewed before the overall decision',
     'No conflict check is ready for decision',
     'Conditions are required for conditional clearance',
-    'Conflict clearance is required before scheduling',
-    'The assigned lawyer already has an appointment during this time',
-    'The assigned lawyer is not available for this firm',
-    'The consultation is not linked to an intake',
   ];
   return allowed.find((entry) => message.includes(entry)) ?? 'The office action could not be completed. Please review the information and try again.';
 }
 
-async function contextFor(inquiryId: string, allowedRoles: MembershipRole[]) {
+async function requireAllowedRole(inquiryId: string, allowedRoles: MembershipRole[]) {
   const context = await requireFirmContext();
   if (!allowedRoles.includes(context.membership.role)) {
     go(inquiryId, 'Your office role is not allowed to perform this action.', 'error');
   }
-  return context;
 }
 
 export async function startIntakeAction(formData: FormData) {
@@ -73,7 +68,7 @@ export async function startIntakeAction(formData: FormData) {
     go(inquiryIdSchema.safeParse(fallback).success ? fallback : 'invalid', 'Please review the intake information.', 'error');
   }
 
-  await contextFor(parsed.data.inquiryId, staffRoles);
+  await requireAllowedRole(parsed.data.inquiryId, staffRoles);
   const supabase = await createClient();
   const { error } = await supabase.rpc('create_intake_from_inquiry', {
     p_inquiry_id: parsed.data.inquiryId,
@@ -117,7 +112,7 @@ export async function addPartyAction(formData: FormData) {
     .filter(Boolean)
     .slice(0, 20);
 
-  await contextFor(parsed.data.inquiryId, staffRoles);
+  await requireAllowedRole(parsed.data.inquiryId, staffRoles);
   const supabase = await createClient();
   const { error } = await supabase.rpc('add_intake_party', {
     p_intake_id: parsed.data.intakeId,
@@ -142,7 +137,7 @@ export async function runConflictCheckAction(formData: FormData) {
     go(inquiryIdSchema.safeParse(fallback).success ? fallback : 'invalid', 'The intake could not be submitted for checking.', 'error');
   }
 
-  await contextFor(parsed.data.inquiryId, staffRoles);
+  await requireAllowedRole(parsed.data.inquiryId, staffRoles);
   const supabase = await createClient();
   const { error } = await supabase.rpc('run_conflict_check', { p_intake_id: parsed.data.intakeId });
   if (error) go(parsed.data.inquiryId, safeDatabaseMessage(error.message), 'error');
@@ -168,7 +163,7 @@ export async function reviewCandidateAction(formData: FormData) {
     go(inquiryIdSchema.safeParse(fallback).success ? fallback : 'invalid', 'Select a finding and write a short reason.', 'error');
   }
 
-  await contextFor(parsed.data.inquiryId, lawyerRoles);
+  await requireAllowedRole(parsed.data.inquiryId, lawyerRoles);
   const supabase = await createClient();
   const { error } = await supabase.rpc('review_conflict_candidate', {
     p_candidate_id: parsed.data.candidateId,
@@ -200,7 +195,7 @@ export async function recordDecisionAction(formData: FormData) {
     go(inquiryIdSchema.safeParse(fallback).success ? fallback : 'invalid', 'Select the lawyer decision and provide written reasoning.', 'error');
   }
 
-  await contextFor(parsed.data.inquiryId, lawyerRoles);
+  await requireAllowedRole(parsed.data.inquiryId, lawyerRoles);
   const supabase = await createClient();
   const { error } = await supabase.rpc('record_conflict_decision', {
     p_intake_id: parsed.data.intakeId,
@@ -210,46 +205,4 @@ export async function recordDecisionAction(formData: FormData) {
   });
   if (error) go(parsed.data.inquiryId, safeDatabaseMessage(error.message), 'error');
   go(parsed.data.inquiryId, 'The lawyer decision was permanently recorded. Prior decisions cannot be edited or deleted.');
-}
-
-function manilaTimestamp(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
-  return `${value}:00+08:00`;
-}
-
-export async function scheduleConsultationAction(formData: FormData) {
-  const start = manilaTimestamp(text(formData, 'scheduledStart'));
-  const end = manilaTimestamp(text(formData, 'scheduledEnd'));
-  const parsed = z
-    .object({
-      inquiryId: inquiryIdSchema,
-      consultationId: z.string().uuid(),
-      lawyerId: z.string().uuid(),
-      start: z.string(),
-      end: z.string(),
-    })
-    .safeParse({
-      inquiryId: text(formData, 'inquiryId'),
-      consultationId: text(formData, 'consultationId'),
-      lawyerId: text(formData, 'lawyerId'),
-      start,
-      end,
-    });
-  const invalidTime = !start || !end || new Date(end).getTime() <= new Date(start).getTime();
-  if (!parsed.success || invalidTime) {
-    const fallback = text(formData, 'inquiryId');
-    go(inquiryIdSchema.safeParse(fallback).success ? fallback : 'invalid', 'Select a lawyer and a valid start and end time.', 'error');
-  }
-
-  await contextFor(parsed.data.inquiryId, staffRoles);
-  const supabase = await createClient();
-  const { error } = await supabase.rpc('schedule_cleared_consultation', {
-    p_consultation_id: parsed.data.consultationId,
-    p_inquiry_id: parsed.data.inquiryId,
-    p_assigned_lawyer_id: parsed.data.lawyerId,
-    p_scheduled_start: start,
-    p_scheduled_end: end,
-  });
-  if (error) go(parsed.data.inquiryId, safeDatabaseMessage(error.message), 'error');
-  go(parsed.data.inquiryId, 'Consultation scheduled. The assigned lawyer and office time are now reserved.');
 }
