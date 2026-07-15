@@ -8,9 +8,27 @@ Use this runbook before merging or deploying the Phase 1A workflow:
 
 All records used for acceptance must be synthetic. Do not use a real client, opposing party, case, document, telephone number or email address.
 
+## Prepare a disposable environment
+
+1. Use a local or isolated staging Supabase project. Never seed the production project.
+2. Apply all repository migrations in order.
+3. Apply `supabase/staging/phase1a_acceptance_seed.sql`.
+4. Configure the application to use the seeded `batalla-associates` firm.
+5. In Supabase Auth, assign temporary staging-only passwords or approved magic links to the `.test` users. Do not commit passwords or links.
+6. After acceptance, reset or destroy the disposable environment. Do not weaken the append-only decision trigger merely to clean up staging rows.
+
+The seed provides:
+
+- secretary, technical-admin, associate, partner and other-firm identities;
+- one synthetic new inquiry;
+- one existing organization and restricted matter party named `Opposing Holdings` for an exact conflict warning;
+- one urgent synthetic task for the Command Center.
+
+The seed is idempotent for its deterministic records, but the manual workflow creates additional rows. Environment reset is the approved cleanup method.
+
 ## Required staging identities
 
-Create separate synthetic users so role boundaries are visible:
+Use separate synthetic users so role boundaries are visible:
 
 | Identity | Membership role | Expected authority |
 |---|---|---|
@@ -18,7 +36,7 @@ Create separate synthetic users so role boundaries are visible:
 | Synthetic Technical Admin | `firm_admin` | Administer technology; no lawyer conflict decision controls |
 | Synthetic Associate | `associate` | Review candidates and record lawyer decision |
 | Synthetic Partner | `partner` | Review candidates and record lawyer decision |
-| Other Firm User | any active role in a second firm | No access to the first firm's intake or conflict records |
+| Other Firm User | `partner` in a second synthetic firm | No access to the first firm's intake or conflict records |
 
 Every acceptance session must record the date, staging environment, build commit, reviewer and result. Screenshots must contain synthetic data only.
 
@@ -26,7 +44,7 @@ Every acceptance session must record the date, staging environment, build commit
 
 1. Open the public inquiry form on desktop and mobile width.
 2. Confirm the no-attorney-client-relationship statement appears before submission.
-3. Submit a synthetic inquiry.
+3. Submit a synthetic inquiry using a `.test` address.
 4. Confirm the user sees only a random `INQ-...` reference.
 5. Confirm no internal `BAT-I-...` reference appears in the response, page source or browser network payload.
 6. Repeat submissions from one synthetic fingerprint until the durable hourly limit rejects the excess request safely.
@@ -43,9 +61,9 @@ Evidence:
 
 1. Sign in as Synthetic Secretary.
 2. Open the inquiry queue and confirm the new inquiry has one obvious next action.
-3. Open the inquiry detail page.
+3. Open the seeded `Synthetic Acceptance Prospect` inquiry.
 4. Start intake with urgency, jurisdiction and missing-information notes.
-5. Add the prospective client, at least one opposing party and one related organization.
+5. Add `Opposing Holdings` as an adverse organization and add one other related synthetic party.
 6. Add an alias to one party.
 7. Confirm the original public submission remains unchanged and visually separate from staff-entered information.
 8. Print or preview the packet and confirm the original submission, parties and both office references are readable.
@@ -58,17 +76,16 @@ Expected result:
 
 ## Gate C — Conflict warnings and legal authority
 
-1. Prepare a synthetic existing contact or matter party with the same normalized name as an intake party.
-2. Run the conflict search as Synthetic Secretary.
-3. Confirm a warning appears with its match source and human-readable reason.
-4. Sign in as Synthetic Technical Admin.
-5. Confirm lawyer review and overall decision controls are absent.
-6. Attempt the controlled decision RPC as Synthetic Technical Admin and confirm PostgreSQL rejects it.
-7. Sign in as Synthetic Associate or Partner.
-8. Review every warning with a written reason.
-9. Attempt to record the overall decision while one warning remains unreviewed and confirm it is blocked.
-10. Finish every warning and record a written disposition.
-11. Attempt to update or delete the decision and confirm the append-only trigger rejects it.
+1. Run the conflict search as Synthetic Secretary after adding `Opposing Holdings`.
+2. Confirm warning candidates identify the existing contact and prior matter-party sources with human-readable reasons.
+3. Sign in as Synthetic Technical Admin.
+4. Confirm lawyer review and overall decision controls are absent.
+5. Attempt the controlled decision RPC as Synthetic Technical Admin and confirm PostgreSQL rejects it.
+6. Sign in as Synthetic Associate or Partner.
+7. Review every warning with a written reason.
+8. Attempt to record the overall decision while one warning remains unreviewed and confirm it is blocked.
+9. Finish every warning and record a written disposition.
+10. Attempt to update or delete the decision and confirm the append-only trigger rejects it.
 
 Expected result:
 
@@ -88,13 +105,14 @@ Expected result:
 
 ## Gate E — Executive Command Center
 
-1. Create at least one staff intake item, one pending lawyer conflict review, one urgent task and one confirmed consultation.
-2. Open the Command Center as each staging role.
-3. Confirm counts reconcile with the underlying queues.
-4. Confirm the lawyer-decision queue links directly to the correct inquiry.
-5. Confirm the staff-intake queue shows urgency, office reference, client name, subject and current stage.
-6. Confirm later unimplemented modules are not represented as live data.
-7. Print the office summary and confirm interactive buttons do not appear on paper.
+1. Confirm the seed's urgent task appears in the count.
+2. Leave one intake in staff preparation and one conflict check waiting for lawyer review.
+3. Open the Command Center as each staging role.
+4. Confirm counts reconcile with the underlying queues.
+5. Confirm the lawyer-decision queue links directly to the correct inquiry.
+6. Confirm the staff-intake queue shows urgency, office reference, client name, subject and current stage.
+7. Confirm later unimplemented modules are not represented as live data.
+8. Print the office summary and confirm interactive buttons do not appear on paper.
 
 ## Gate F — Cross-firm isolation
 
