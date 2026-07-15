@@ -1,6 +1,11 @@
 name: Import EPIC-002 implementation
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/import-epic002.yml
   push:
     branches:
       - epic-002/auth-mfa-membership-hardening
@@ -12,6 +17,7 @@ permissions:
 
 jobs:
   import:
+    if: github.event_name == 'push' || github.head_ref == 'epic-002/auth-mfa-membership-hardening'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +25,18 @@ jobs:
           ref: epic-002/auth-mfa-membership-hardening
           fetch-depth: 0
 
+      - name: Check implementation bundle
+        id: bundle
+        shell: bash
+        run: |
+          if [[ -f .github/import/epic002-files.tar.gz.b64 ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Decode and verify implementation bundle
+        if: steps.bundle.outputs.present == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -27,6 +44,7 @@ jobs:
           echo "3bffe6c7a0b33f8da081f92ed8c7603ba89208e2620f9692031ffb2fd322d674  /tmp/epic002-files.tar.gz" | sha256sum --check
 
       - name: Apply EPIC-002 source tree
+        if: steps.bundle.outputs.present == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -36,6 +54,7 @@ jobs:
           git diff --cached --check
 
       - name: Commit and push implementation
+        if: steps.bundle.outputs.present == 'true'
         shell: bash
         run: |
           set -euo pipefail
