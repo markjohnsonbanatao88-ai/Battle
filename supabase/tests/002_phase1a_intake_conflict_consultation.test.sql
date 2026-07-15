@@ -111,15 +111,15 @@ select set_config(
   true
 );
 
-select like(
+select matches(
   (select public_reference from public.inquiries where id = '31000000-0000-0000-0000-000000000001'),
-  'INQ-%',
+  '^INQ-[A-F0-9]{12}$',
   'public inquiry receives a random office-safe public reference'
 );
 
-select like(
+select matches(
   (select internal_reference from public.inquiries where id = '31000000-0000-0000-0000-000000000001'),
-  'BAT-I-%',
+  '^BAT-I-[0-9]{4}-[0-9]{6}$',
   'inquiry receives a separate internal office reference'
 );
 
