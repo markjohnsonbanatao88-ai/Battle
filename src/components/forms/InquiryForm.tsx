@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 interface SubmissionState {
   kind: 'idle' | 'submitting' | 'success' | 'error';
   message: string;
+  publicReference?: string;
 }
 
 const initialState: SubmissionState = { kind: 'idle', message: '' };
@@ -41,7 +42,7 @@ export function InquiryForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const result = (await response.json()) as { message?: string };
+      const result = (await response.json()) as { message?: string; publicReference?: string };
 
       if (!response.ok) {
         throw new Error(result.message ?? 'The inquiry could not be submitted.');
@@ -50,6 +51,7 @@ export function InquiryForm() {
       form.reset();
       setState({
         kind: 'success',
+        publicReference: result.publicReference,
         message:
           'Your inquiry was received for office review. This acknowledgment does not create an attorney-client relationship.',
       });
@@ -80,7 +82,7 @@ export function InquiryForm() {
             id="preferredContact"
             name="preferredContact"
             defaultValue="email"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-12 w-full rounded-md border border-input bg-background px-4 py-2 text-base"
           >
             <option value="email">Email</option>
             <option value="phone">Telephone</option>
@@ -107,8 +109,8 @@ export function InquiryForm() {
         <Input id="website" name="website" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <label className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
-        <input name="consent" type="checkbox" required className="mt-1 h-4 w-4 accent-zinc-900" />
+      <label className="flex items-start gap-3 text-base leading-7 text-muted-foreground">
+        <input name="consent" type="checkbox" required className="mt-1 h-5 w-5 accent-zinc-900" />
         <span>
           I consent to the office using this information to review the inquiry, conduct conflict screening,
           and contact me. I understand that submission does not create an attorney-client relationship.
@@ -120,18 +122,27 @@ export function InquiryForm() {
           role="status"
           className={
             state.kind === 'error'
-              ? 'border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive'
+              ? 'border border-destructive/40 bg-destructive/5 p-5 text-base text-destructive'
               : state.kind === 'success'
-                ? 'border border-emerald-700/30 bg-emerald-700/5 p-4 text-sm text-emerald-800'
-                : 'border border-border bg-muted/50 p-4 text-sm text-muted-foreground'
+                ? 'border border-emerald-700/30 bg-emerald-700/5 p-5 text-base text-emerald-900'
+                : 'border border-border bg-muted/50 p-5 text-base text-muted-foreground'
           }
         >
-          {state.message}
+          <p>{state.message}</p>
+          {state.publicReference ? (
+            <div className="mt-4 border-t border-current/20 pt-4">
+              <p className="font-semibold">Your reference number</p>
+              <p className="mt-1 font-mono text-xl tracking-wide" data-testid="public-reference">
+                {state.publicReference}
+              </p>
+              <p className="mt-2 text-sm">Keep this number when contacting the office.</p>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      <Button type="submit" size="lg" className="rounded-none" disabled={state.kind === 'submitting'}>
-        {state.kind === 'submitting' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      <Button type="submit" size="lg" className="min-h-12 rounded-none px-7 text-base" disabled={state.kind === 'submitting'}>
+        {state.kind === 'submitting' ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
         Submit inquiry
       </Button>
     </form>
@@ -141,7 +152,9 @@ export function InquiryForm() {
 function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <Label htmlFor={htmlFor} className="text-base">
+        {label}
+      </Label>
       {children}
     </div>
   );

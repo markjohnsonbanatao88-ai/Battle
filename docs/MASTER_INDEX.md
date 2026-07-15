@@ -38,6 +38,8 @@ Before proposing work, Claude must read:
 15. `23_STATE_MACHINES_AND_NUMBERING.md`
 16. `implementation-reports/BATALLA_OS_PROGRAM_STATUS.md`
 17. `implementation-reports/PHASE_1A_EXECUTION_CONTRACT.md`
+18. `implementation-reports/PHASE-1A.md` when reviewing the active Phase 1A implementation
+19. `runbooks/PHASE-1A-STAGING-ACCEPTANCE.md` before recommending Phase 1A merge or deployment
 
 Claude then audits the repository against `21_TRACEABILITY_MATRIX.md` and recommends the next **unblocked** epic only.
 
@@ -55,6 +57,7 @@ Before editing, Codex must read:
 8. The relevant workflow, screen, data, permission, security, and test sections
 9. `16_DEFINITION_OF_DONE.md`
 10. The current Supabase migrations
+11. `runbooks/PHASE-1A-STAGING-ACCEPTANCE.md` before reporting Phase 1A ready for review
 
 Codex must not invent missing policy. It must record unresolved questions in `19_DECISION_REGISTER.md` as **Needs Approval** and implement only approved defaults.
 
@@ -84,7 +87,7 @@ Codex must not invent missing policy. It must record unresolved questions in `19
 | `18_DESIGN_SYSTEM.md` | Brand, visual language, accessibility and component behavior |
 | `19_DECISION_REGISTER.md` | Approved defaults, unresolved business choices, content blockers |
 | `20_AGENT_OPERATING_SYSTEM.md` | Claude/Codex/GitHub/Vercel/Supabase working protocol |
-| `21_TRACEABILITY_MATRIX.md` | Requirement-to-screen-to-table-to-test mapping |
+| `21_TRACEABILITY_MATRIX.md` | Requirement-to-screen-to-table-to-test mapping, including concrete Phase 1A evidence |
 | `22_EPIC_ACCEPTANCE_CRITERIA.md` | Exact completion conditions for every epic |
 | `23_STATE_MACHINES_AND_NUMBERING.md` | Allowed lifecycle transitions and numbering rules |
 | `24_CONFIGURATION_CATALOG.md` | Firm-configurable settings and historical snapshot rules |
@@ -95,7 +98,9 @@ Codex must not invent missing policy. It must record unresolved questions in `19
 | `28_OLD_SCHOOL_USER_EXPERIENCE_CONTRACT.md` | Binding requirement that BatallaOS adapt to non-tech-savvy, paper-first users |
 | `implementation-reports/BATALLA_OS_PROGRAM_STATUS.md` | Program-level truth and current execution correction |
 | `implementation-reports/PHASE_1A_EXECUTION_CONTRACT.md` | Binding first usable legal-office workflow contract |
+| `implementation-reports/PHASE-1A.md` | Active Phase 1A implementation, authorization, tests, rollback and remaining acceptance evidence |
 | `implementation-reports/EPIC-001.md` | Exact delivery, verification, migration and remaining gate evidence |
+| `runbooks/PHASE-1A-STAGING-ACCEPTANCE.md` | Synthetic staging, role, isolation, Command Center and print/PDF acceptance procedure |
 | `BUILD_MANIFEST.json` | Machine-readable phases, epics, gates and prohibited shortcuts |
 
 ## Global non-negotiables

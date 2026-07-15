@@ -86,3 +86,51 @@
     @apply h-px w-full bg-gradient-to-r from-transparent via-secondary/70 to-transparent;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 10.5pt;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  nav,
+  aside[aria-label='Dashboard navigation'] {
+    display: none !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  section,
+  article {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+}
