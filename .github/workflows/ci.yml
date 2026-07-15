@@ -104,7 +104,7 @@ jobs:
         run: supabase stop --no-backup
 
   browser:
-    name: Playwright public smoke test
+    name: Playwright public and office acceptance evidence
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -117,6 +117,32 @@ jobs:
           npx --yes pnpm@10.13.1 import
           npx --yes pnpm@10.13.1 install --frozen-lockfile --ignore-scripts
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Run public browser smoke test
+        run: npm run test:e2e
         env:
           NEXT_PUBLIC_FIRM_SLUG: batalla-associates
+      - name: Capture zero-cost Phase 1A office acceptance evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4174 --directory acceptance/phase1a > phase1a-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error http://127.0.0.1:4174/ > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          curl --fail --silent --show-error http://127.0.0.1:4174/ > /dev/null
+          node scripts/capture-phase1a-acceptance.mjs
+      - name: Upload Phase 1A office acceptance package
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1a-office-acceptance
+          path: |
+            acceptance/phase1a/index.html
+            phase1a-acceptance-evidence
+          retention-days: 7
