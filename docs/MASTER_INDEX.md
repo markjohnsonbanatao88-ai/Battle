@@ -1,6 +1,6 @@
-# Batalla Law Office OS — Master Index
+# BatallaOS — Master Index
 
-This directory is the binding construction manual for the Batalla & Associates Law Office OS. Claude, Codex, and human contributors must treat it as the product and engineering source of truth.
+This directory is the binding construction manual for **BatallaOS**, the complete digital operating system for Batalla & Associates. Claude, Codex, and human contributors must treat it as the product and engineering source of truth.
 
 ## Authority order
 
@@ -8,30 +8,32 @@ When sources disagree, use this order:
 
 1. Written decisions in `19_DECISION_REGISTER.md` marked **Approved**.
 2. Security and privacy controls in `08_SECURITY_PRIVACY_COMPLIANCE.md`.
-3. Product behavior in `03_WORKFLOWS.md`, `04_ROLE_PERMISSION_MATRIX.md`, and `07_SCREEN_SPECIFICATIONS.md`.
-4. Data contracts in `05_DATA_MODEL_BLUEPRINT.md` and `06_SERVER_ACTIONS_API_CONTRACTS.md`.
-5. Delivery order in `15_IMPLEMENTATION_ROADMAP.md` and `BUILD_MANIFEST.json`.
-6. Existing application code and migrations.
-7. Older summaries in `PRODUCT_SCOPE.md`, `ARCHITECTURE.md`, and `SECURITY.md`.
+3. Product identity, operating philosophy, module boundaries and role experience in `27_BATALLA_OS_MASTER_ARCHITECTURE.md`.
+4. Product behavior in `03_WORKFLOWS.md`, `04_ROLE_PERMISSION_MATRIX.md`, and `07_SCREEN_SPECIFICATIONS.md`.
+5. Data contracts in `05_DATA_MODEL_BLUEPRINT.md` and `06_SERVER_ACTIONS_API_CONTRACTS.md`.
+6. Delivery order in `15_IMPLEMENTATION_ROADMAP.md` and `BUILD_MANIFEST.json`.
+7. Existing application code and migrations.
+8. Older summaries in `PRODUCT_SCOPE.md`, `ARCHITECTURE.md`, and `SECURITY.md`.
 
-Existing code is not allowed to override a documented security requirement. If the code contradicts this manual, open an issue and fix the code.
+Existing code is not allowed to override a documented security requirement or the approved BatallaOS operating philosophy. If code contradicts this manual, open an issue and fix the code.
 
 ## Mandatory reading order for Claude
 
 Before proposing work, Claude must read:
 
 1. `PROJECT_STATE.md`
-2. `00_MASTER_BUILD_BLUEPRINT.md`
-3. `19_DECISION_REGISTER.md`
-4. `04_ROLE_PERMISSION_MATRIX.md`
-5. `03_WORKFLOWS.md`
-6. `05_DATA_MODEL_BLUEPRINT.md`
-7. `08_SECURITY_PRIVACY_COMPLIANCE.md`
-8. `15_IMPLEMENTATION_ROADMAP.md`
-9. `16_DEFINITION_OF_DONE.md`
-10. `20_AGENT_OPERATING_SYSTEM.md`
-11. `22_EPIC_ACCEPTANCE_CRITERIA.md`
-12. `23_STATE_MACHINES_AND_NUMBERING.md`
+2. `27_BATALLA_OS_MASTER_ARCHITECTURE.md`
+3. `00_MASTER_BUILD_BLUEPRINT.md`
+4. `19_DECISION_REGISTER.md`
+5. `04_ROLE_PERMISSION_MATRIX.md`
+6. `03_WORKFLOWS.md`
+7. `05_DATA_MODEL_BLUEPRINT.md`
+8. `08_SECURITY_PRIVACY_COMPLIANCE.md`
+9. `15_IMPLEMENTATION_ROADMAP.md`
+10. `16_DEFINITION_OF_DONE.md`
+11. `20_AGENT_OPERATING_SYSTEM.md`
+12. `22_EPIC_ACCEPTANCE_CRITERIA.md`
+13. `23_STATE_MACHINES_AND_NUMBERING.md`
 
 Claude then audits the repository against `21_TRACEABILITY_MATRIX.md` and recommends the next **unblocked** epic only.
 
@@ -40,10 +42,11 @@ Claude then audits the repository against `21_TRACEABILITY_MATRIX.md` and recomm
 Before editing, Codex must read:
 
 1. `AGENTS.md`
-2. The assigned epic in `15_IMPLEMENTATION_ROADMAP.md`
-3. The relevant workflow, screen, data, permission, security, and test sections
-4. `16_DEFINITION_OF_DONE.md`
-5. The current Supabase migrations
+2. `27_BATALLA_OS_MASTER_ARCHITECTURE.md`
+3. The assigned epic in `15_IMPLEMENTATION_ROADMAP.md`
+4. The relevant workflow, screen, data, permission, security, and test sections
+5. `16_DEFINITION_OF_DONE.md`
+6. The current Supabase migrations
 
 Codex must not invent missing policy. It must record unresolved questions in `19_DECISION_REGISTER.md` as **Needs Approval** and implement only approved defaults.
 
@@ -52,7 +55,8 @@ Codex must not invent missing policy. It must record unresolved questions in `19
 | File | Purpose |
 |---|---|
 | `PROJECT_STATE.md` | Honest implemented-versus-target status |
-| `00_MASTER_BUILD_BLUEPRINT.md` | Mission, boundaries, modules, personas, operating defaults |
+| `27_BATALLA_OS_MASTER_ARCHITECTURE.md` | Binding product identity, system spine, operating philosophy, modules, role experience and delivery phases |
+| `00_MASTER_BUILD_BLUEPRINT.md` | Mission, boundaries, personas and approved operating defaults |
 | `01_PRODUCT_REQUIREMENTS.md` | Functional and non-functional requirements with IDs |
 | `02_INFORMATION_ARCHITECTURE.md` | Navigation, route families, global search, object hierarchy |
 | `03_WORKFLOWS.md` | End-to-end legal-office workflows and state transitions |
@@ -79,13 +83,18 @@ Codex must not invent missing policy. It must record unresolved questions in `19
 | `24_CONFIGURATION_CATALOG.md` | Firm-configurable settings and historical snapshot rules |
 | `25_RELEASE_CHECKLISTS.md` | PR, staging, module and production launch gates |
 | `26_TEST_INFRASTRUCTURE.md` | EPIC-001 commands, fixtures, CI jobs and RLS regression behavior |
-| `implementation-reports/EPIC-001.md` | Exact delivery, verification, migration and remaining gate evidence |
+| `implementation-reports/EPIC-001.md` | Exact delivery, verification, migration and gate evidence |
 | `BUILD_MANIFEST.json` | Machine-readable phases, epics, gates and prohibited shortcuts |
 
 ## Global non-negotiables
 
+- BatallaOS is a law-office operating system, not an automated lawyer or public legal-advice service.
+- The Case Management Core is the coordination spine for documents, hearings, deadlines, tasks, billing, physical folders, portal sharing, knowledge and reports.
+- Every operationally important view must support a printable form.
+- Nothing legally important is automatically sent, filed, signed, approved, deleted or decided.
+- AI assists; lawyers decide.
+- Paper and digital records must reconcile.
 - No Firebase, Firestore, Genkit, eMango, BarangayOS, barangay workflows, public document buckets, or client-side authorization.
 - No real client data, privileged communications, production logs, tokens, or database dumps in Claude or Codex prompts.
-- No feature is complete until its UI, server mutation, validation, RLS, audit event, error states, tests, and documentation all exist.
+- No feature is complete until its UI, server mutation, validation, RLS, audit event, error states, tests, documentation and role-appropriate print behavior all exist.
 - Public claims remain unpublished until verified in writing.
-- The system is a law-office operating system, not an automated lawyer or public legal-advice service.
