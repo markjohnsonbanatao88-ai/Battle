@@ -7,6 +7,12 @@ on:
     paths:
       - '.github/import/**'
       - '.github/workflows/import-epic-001.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/import/**'
+      - '.github/workflows/import-epic-001.yml'
 
 permissions:
   contents: write
