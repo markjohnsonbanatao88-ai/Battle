@@ -50,7 +50,7 @@ interface ConsultationView {
   notes: string | null;
 }
 
-const lawyerRoles: MembershipRole[] = ['firm_admin', 'managing_partner', 'partner', 'associate'];
+const lawyerRoles: MembershipRole[] = ['managing_partner', 'partner', 'associate'];
 
 export default async function InquiryDetailPage({
   params,
