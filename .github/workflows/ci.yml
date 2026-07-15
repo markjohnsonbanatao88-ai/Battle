@@ -50,12 +50,35 @@ jobs:
           status=${PIPESTATUS[0]}
           tail -n 250 db-test.log > db-test-tail.log
           exit "$status"
+      - name: Rehearse Phase 1A feature withdrawal and restore
+        shell: bash
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -euo pipefail
+          DB=(psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1)
+
+          "${DB[@]}" -f supabase/rollback/phase1a_feature_withdrawal.sql 2>&1 | tee rollback-rehearsal.log
+
+          withdrawn=$("${DB[@]}" -Atc "select not has_function_privilege('authenticated', 'public.create_intake_from_inquiry(uuid,text,text,text)', 'EXECUTE')")
+          hidden=$("${DB[@]}" -Atc "select not has_table_privilege('authenticated', 'public.conflict_decisions', 'SELECT')")
+          test "$withdrawn" = "t"
+          test "$hidden" = "t"
+
+          "${DB[@]}" -f supabase/rollback/phase1a_feature_restore.sql 2>&1 | tee -a rollback-rehearsal.log
+
+          restored=$("${DB[@]}" -Atc "select has_function_privilege('authenticated', 'public.create_intake_from_inquiry(uuid,text,text,text)', 'EXECUTE')")
+          visible=$("${DB[@]}" -Atc "select has_table_privilege('authenticated', 'public.conflict_decisions', 'SELECT')")
+          test "$restored" = "t"
+          test "$visible" = "t"
       - name: Upload database failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: database-test-failure
-          path: db-test-tail.log
+          path: |
+            db-test-tail.log
+            rollback-rehearsal.log
           retention-days: 3
       - name: Stop local Supabase
         if: always()
