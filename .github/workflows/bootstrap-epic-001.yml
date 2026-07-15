@@ -7,6 +7,12 @@ on:
     paths:
       - '.github/import/snapshot-*.txt'
       - '.github/workflows/bootstrap-epic-001.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/import/snapshot-*.txt'
+      - '.github/workflows/bootstrap-epic-001.yml'
 
 permissions:
   contents: write
