@@ -8,13 +8,19 @@ describe('InquiryForm', () => {
     vi.unstubAllGlobals();
   });
 
-  it('submits a synthetic inquiry and displays the legal acknowledgment', async () => {
+  it('submits a synthetic inquiry and displays the legal acknowledgment and public reference', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ message: 'Inquiry received.' }), {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+      new Response(
+        JSON.stringify({
+          message: 'Inquiry received.',
+          publicReference: 'INQ-ABC123DEF456',
+        }),
+        {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -34,6 +40,7 @@ describe('InquiryForm', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'This acknowledgment does not create an attorney-client relationship.',
     );
+    expect(screen.getByTestId('public-reference')).toHaveTextContent('INQ-ABC123DEF456');
 
     const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('/api/public/inquiries');
