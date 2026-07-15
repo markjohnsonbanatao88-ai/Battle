@@ -71,6 +71,24 @@ jobs:
           visible=$("${DB[@]}" -Atc "select has_table_privilege('authenticated', 'public.conflict_decisions', 'SELECT')")
           test "$restored" = "t"
           test "$visible" = "t"
+      - name: Validate Phase 1A synthetic staging seed
+        shell: bash
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -euo pipefail
+          DB=(psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1)
+          "${DB[@]}" -f supabase/staging/phase1a_acceptance_seed.sql 2>&1 | tee staging-seed.log
+
+          users=$("${DB[@]}" -Atc "select count(*) from auth.users where email like '%@phase1a.example.test'")
+          inquiry=$("${DB[@]}" -Atc "select count(*) from public.inquiries where source = 'staging_acceptance'")
+          conflict_source=$("${DB[@]}" -Atc "select count(*) from public.contacts where id = '42000000-0000-0000-0000-000000000001'")
+          urgent_task=$("${DB[@]}" -Atc "select count(*) from public.tasks where id = '62000000-0000-0000-0000-000000000001' and priority = 'urgent'")
+
+          test "$users" = "5"
+          test "$inquiry" = "1"
+          test "$conflict_source" = "1"
+          test "$urgent_task" = "1"
       - name: Upload database failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -79,6 +97,7 @@ jobs:
           path: |
             db-test-tail.log
             rollback-rehearsal.log
+            staging-seed.log
           retention-days: 3
       - name: Stop local Supabase
         if: always()
