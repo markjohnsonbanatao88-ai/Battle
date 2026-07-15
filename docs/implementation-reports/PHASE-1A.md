@@ -12,7 +12,8 @@ This implementation follows the BatallaOS master architecture and the old-school
 
 - Branch: `phase-1a/intake-conflict-consultation`
 - Pull request: `#6`
-- Review state: draft until all required gates and evidence pass
+- Review state: **draft** until synthetic staging, protected print/PDF and actual whole-office acceptance are completed
+- Production state: not merged, not applied to production Supabase and not released to production
 
 ## Implemented application behavior
 
@@ -41,20 +42,21 @@ This implementation follows the BatallaOS master architecture and the old-school
 - Search results are warnings only; the system never decides a legal conflict.
 - Candidate findings require a lawyer-position role and written reason.
 - Every candidate must be reviewed before an overall decision.
-- Overall decision requires lawyer-position role and written reasoning.
+- Overall decision requires a lawyer-position role and written reasoning.
 - Decisions are append-only and cannot be updated or deleted.
+- Technical firm administration does not automatically grant legal-decision authority.
 
 ### Consultation
 
 - Scheduling remains locked until the latest lawyer decision is `cleared` or `conditional`.
 - Staff can create a consultation directly from the cleared intake.
-- Only active lawyer-position memberships appear as assignable lawyers.
-- Application check and PostgreSQL exclusion constraint both prevent lawyer overlap.
+- Only active managing partners, partners and associates appear as assignable lawyers.
+- Application handling and PostgreSQL exclusion constraints prevent lawyer overlap.
 - Dates and times are entered and displayed in Philippine time.
 
 ### Executive Command Center
 
-The first implemented command-center slice answers:
+The implemented Phase 1A command-center slice answers:
 
 - What conflict decisions need a lawyer?
 - Which prospective clients are waiting?
@@ -63,7 +65,7 @@ The first implemented command-center slice answers:
 - What consultations are coming in the next seven days?
 - Is Phase 1A office work currently under control?
 
-The screen explicitly does not pretend that later hearing, deadline, Dan-recommendation or full management-report modules already exist.
+It now includes direct, clickable lawyer-decision and staff-intake queues with internal reference, prospective-client name, subject, urgency, current stage and relevant timestamp. The screen explicitly does not pretend that later hearing, deadline, Dan-recommendation or full management-report modules already exist.
 
 ### Print-first behavior
 
@@ -71,6 +73,7 @@ The screen explicitly does not pretend that later hearing, deadline, Dan-recomme
 - Packet includes internal reference, public reference, original submission, parties, warnings, lawyer decision history and consultation information.
 - A4 print rules remove navigation and interactive controls.
 - Important printed records identify the packet and print timestamp.
+- Actual browser print-preview and saved-PDF inspection remains a manual acceptance gate.
 
 ## Database changes
 
@@ -82,16 +85,17 @@ Additive migrations:
 - `202607160013_phase1a_scheduling_directory.sql`
 - `202607160014_phase1a_create_scheduled_consultation.sql`
 - `202607160015_phase1a_lawyer_only_roles.sql`
+- `202607160016_phase1a_reference_generation_fix.sql`
 
 New authoritative records:
 
-- public submission rate limits
-- structured intakes
-- intake parties
-- conflict checks
-- conflict search terms
-- conflict candidates
-- append-only conflict decisions
+- public submission rate limits;
+- structured intakes;
+- intake parties;
+- conflict checks;
+- conflict search terms;
+- conflict candidates;
+- append-only conflict decisions.
 
 ## Authorization and legal safety
 
@@ -104,33 +108,60 @@ New authoritative records:
 - Audit events are written for submission, intake creation, party capture, conflict search, candidate review, overall decision and consultation scheduling.
 - No AI action is part of this workflow.
 
-## Tests added or updated
+## Tests and operational evidence
 
-- Public inquiry route test: public reference, fingerprint, rate-limit response and safe errors.
-- Inquiry component test: legal acknowledgment and public reference.
-- PostgreSQL pgTAP workflow suite: references, intake, parties, conflict candidates, lawyer-only decision, append-only history, clearance gate, overlap prevention, cross-firm isolation, durable rate limiting and audit event.
+Automated coverage includes:
 
-## Rollback approach
+- public inquiry route tests for public reference, fingerprint, durable rate-limit response and safe errors;
+- inquiry component test for legal acknowledgment and public reference;
+- protected server-action tests proving secretary intake preparation, technical-admin denial, lawyer candidate review and safe scheduling-overlap errors;
+- PostgreSQL pgTAP workflow suite for references, intake, parties, conflict candidates, lawyer-only decision, append-only history, clearance gate, overlap prevention, cross-firm isolation, durable rate limiting and audit events;
+- separate lawyer-authority regression suite;
+- Playwright public-site smoke journey;
+- production Next.js build and strict TypeScript;
+- non-destructive Phase 1A feature-withdrawal and restore rehearsal;
+- deterministic synthetic staging-seed validation.
 
-This change is additive and remains unmerged while under review. Before production application, rollback must be rehearsed on a disposable Supabase environment. Rollback must:
+### Verified GitHub Actions evidence
 
-1. Disable Phase 1A UI routes and controlled RPC execution.
-2. Preserve all created inquiry, intake, conflict and consultation records for export/review.
-3. Remove new grants and functions before dropping any new table.
-4. Remove the overlap constraint before removing `btree_gist` only when no other feature depends on it.
-5. Never discard a recorded conflict decision or original inquiry submission.
+Workflow run **#83**, run ID `29454715942`, validated head `7f367bd2bcfed7027bf180b2ee928ebed0e7fff9` before this documentation update:
 
-A production rollback is therefore a controlled feature withdrawal and data preservation process, not destructive deletion.
+- Lint, unit/integration tests, production build and strict types: **passed**.
+- Playwright public smoke test: **passed**.
+- Supabase migrations and all RLS/pgTAP tests: **passed**.
+- Phase 1A withdrawal and restore rehearsal: **passed**.
+- Synthetic staging seed validation: **passed**.
 
-## Current verification status
+Because this report is itself a new commit, the PR's current head must still receive a fresh green CI run before review status can change.
 
-GitHub CI is the source of truth for lint, unit tests, production build, strict TypeScript, Playwright and local Supabase/pgTAP execution. This report must be updated with the final run ID and conclusions before the pull request can leave draft state.
+## Non-destructive withdrawal and restore
 
-## Known remaining work before merge
+- `supabase/rollback/phase1a_feature_withdrawal.sql` revokes public and authenticated Phase 1A execution/read grants without deleting tables or records.
+- `supabase/rollback/phase1a_feature_restore.sql` restores only the reviewed grants.
+- CI verifies the privileges disappear during withdrawal and return during restore.
+- Original inquiries, conflict decisions, consultations and audit events are preserved throughout.
+- Production execution requires an approved incident/change record.
 
-- Resolve every GitHub CI finding.
-- Add focused protected-action tests where they provide coverage beyond the database authorization suite.
-- Update the traceability matrix.
-- Complete staging acceptance evidence with synthetic data.
-- Verify printed packet layout in a browser/PDF preview.
-- Keep the pull request draft until the full Phase 1A acceptance contract is satisfied.
+## Synthetic staging acceptance
+
+- `supabase/staging/phase1a_acceptance_seed.sql` creates only reserved `.test` identities and deterministic fictional records in a disposable environment.
+- It includes secretary, technical-admin, associate, partner and other-firm roles, a conflict source, a synthetic inquiry and an urgent task.
+- `docs/runbooks/PHASE-1A-STAGING-ACCEPTANCE.md` defines role, isolation, workflow, Command Center and print/PDF gates.
+- No passwords, magic links, live client data or production credentials are committed.
+
+## Remaining gates before ready for review
+
+Automated implementation gates are complete for the tested head. The PR must remain draft until all of the following are actually performed and recorded:
+
+1. Deploy the branch to an isolated staging environment with synthetic data only.
+2. Complete the secretary workflow walkthrough.
+3. Complete the lawyer conflict-review and decision walkthrough.
+4. Confirm technical-admin denial and other-firm isolation through the real protected UI/Data API.
+5. Inspect the complete protected packet in browser A4 print preview and a saved PDF.
+6. Record secretary, lawyer, technical and print/PDF reviewer results in the acceptance runbook.
+7. Resolve findings or document explicitly approved exceptions.
+8. Obtain a fresh green CI result on the final review head.
+
+## Release boundary
+
+Passing CI does not authorize production. Merge, production Supabase migration, Vercel release, staff onboarding and any live-client use require separate controlled release approval. Phase 1A does not complete the other BatallaOS modules.
