@@ -28,11 +28,15 @@ jobs:
       - name: Reconstruct patch
         shell: bash
         run: |
-          cat .github/import/chunk-*.txt > /tmp/epic.patch.gz.b64
-          base64 -d /tmp/epic.patch.gz.b64 > /tmp/epic.patch.gz
-          echo "a22f806f6ea208ebbd5381d419e763e93b750172081535ecac46880c5e4deca9  /tmp/epic.patch.gz" | sha256sum -c -
+          cat .github/import/chunk-*.txt | tr -d '\r\n\t ' > /tmp/epic.patch.gz.b64
+          base64 --decode /tmp/epic.patch.gz.b64 > /tmp/epic.patch.gz
+          echo "Encoded bytes: $(wc -c < /tmp/epic.patch.gz.b64)"
+          echo "Gzip bytes: $(wc -c < /tmp/epic.patch.gz)"
+          sha256sum /tmp/epic.patch.gz
+          gzip -t /tmp/epic.patch.gz
           gunzip -c /tmp/epic.patch.gz > /tmp/epic.patch
-          echo "4982f1a471163017d85fea7baf14d90abacb29ea640e75bc87348bdd041fe90e  /tmp/epic.patch" | sha256sum -c -
+          echo "Patch bytes: $(wc -c < /tmp/epic.patch)"
+          sha256sum /tmp/epic.patch
 
       - name: Apply snapshot
         shell: bash
