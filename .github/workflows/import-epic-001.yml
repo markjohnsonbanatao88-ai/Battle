@@ -26,51 +26,27 @@ jobs:
           fetch-depth: 0
           show-progress: false
 
-      - name: Reconstruct patch
-        id: reconstruct
-        continue-on-error: true
+      - name: Reconstruct and verify patch
         shell: bash
         run: |
-          set +e
-          {
-            echo "Per-chunk normalized hashes:"
-            for file in .github/import/chunk-*.txt; do
-              printf '%s  %s\n' "$(tr -d '\r\n\t ' < "$file" | sha256sum | awk '{print $1}')" "$file"
-            done
-            cat .github/import/chunk-*.txt | tr -d '\r\n\t ' > /tmp/epic.patch.gz.b64
-            echo "cat_status=$?"
-            echo "encoded_bytes=$(wc -c < /tmp/epic.patch.gz.b64)"
-            base64 --decode /tmp/epic.patch.gz.b64 > /tmp/epic.patch.gz
-            decode_status=$?
-            echo "decode_status=$decode_status"
-            echo "gzip_bytes=$(wc -c < /tmp/epic.patch.gz)"
-            sha256sum /tmp/epic.patch.gz
-            gzip -t /tmp/epic.patch.gz
-            gzip_status=$?
-            echo "gzip_status=$gzip_status"
-            if [ "$gzip_status" -eq 0 ]; then
-              gunzip -c /tmp/epic.patch.gz > /tmp/epic.patch
-              gunzip_status=$?
-              echo "gunzip_status=$gunzip_status"
-              echo "patch_bytes=$(wc -c < /tmp/epic.patch)"
-              sha256sum /tmp/epic.patch
-            fi
-          } 2>&1 | tee /tmp/import-diagnostic.txt
-          test "$decode_status" -eq 0 -a "$gzip_status" -eq 0
-
-      - name: Upload diagnostic
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: epic-import-diagnostic
-          path: /tmp/import-diagnostic.txt
-
-      - name: Stop on reconstruction failure
-        if: steps.reconstruct.outcome == 'failure'
-        run: exit 1
+          parts=(
+            .github/import/chunk-000.txt
+            .github/import/chunk-001.txt
+            .github/import/chunk-002.txt
+            .github/import/chunk-003.txt
+            .github/import/chunk-004.txt
+            .github/import/chunk-005a.txt
+            .github/import/chunk-005b.txt
+            .github/import/chunk-006.txt
+          )
+          cat "${parts[@]}" | tr -d '\r\n\t ' > /tmp/epic.patch.gz.b64
+          base64 --decode /tmp/epic.patch.gz.b64 > /tmp/epic.patch.gz
+          echo "a22f806f6ea208ebbd5381d419e763e93b750172081535ecac46880c5e4deca9  /tmp/epic.patch.gz" | sha256sum -c -
+          gzip -t /tmp/epic.patch.gz
+          gunzip -c /tmp/epic.patch.gz > /tmp/epic.patch
+          echo "4982f1a471163017d85fea7baf14d90abacb29ea640e75bc87348bdd041fe90e  /tmp/epic.patch" | sha256sum -c -
 
       - name: Apply snapshot
-        if: steps.reconstruct.outcome == 'success'
         shell: bash
         run: |
           git config user.name "OpenAI Codex"
