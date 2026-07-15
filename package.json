@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
@@ -22,7 +22,7 @@
     "test:e2e:install": "playwright install chromium",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
-    "check:local": "npm run lint && npm run typecheck && npm run test:unit && npm run build",
+    "check:local": "npm run lint && npm run test:unit && npm run build && npm run typecheck",
     "check": "npm run check:local"
   },
   "dependencies": {
