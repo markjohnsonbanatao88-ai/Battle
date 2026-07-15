@@ -108,7 +108,7 @@ New authoritative records:
 
 ## Tests and verified evidence
 
-The current PR head must have a successful GitHub Actions run before review or merge. Run **#89** (`29457494732`) is the historical evidence run that first verified the complete zero-cost acceptance pipeline.
+The current PR head must have a successful GitHub Actions run before review or merge. Run **#91** (`29457638533`) passed on final head `10a908d3447dc35948a879da673a68aac302aebe`.
 
 Verified gates include:
 
@@ -148,7 +148,9 @@ Disposable Supabase in GitHub Actions validates the real migrations, functions, 
 - the standalone interactive HTML simulator;
 - a two-page A4 intake/conflict/consultation PDF.
 
-The artifact attached to run #89 had ID `8359915373` and digest `sha256:9f47a5b62e785f237d73006caf1773241839a395a559ed3983b921a77943517b`. Every later successful run creates a fresh equivalent artifact tied to its own head SHA.
+Final artifact ID: `8359976384`
+
+Final artifact digest: `sha256:8a1f223ee12c7e956c02912d454ac776225977b550a069642cf829ef2dc1cb45`
 
 The PDF was rendered and visually inspected after download. It contained two readable pages with no clipped names, references, warning reasons, decision history or consultation fields.
 
