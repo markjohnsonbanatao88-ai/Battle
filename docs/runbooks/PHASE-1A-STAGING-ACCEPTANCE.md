@@ -8,7 +8,54 @@ Use this runbook before merging or deploying the Phase 1A workflow:
 
 All records used for acceptance must be synthetic. Do not use a real client, opposing party, case, document, telephone number or email address.
 
-## Prepare a disposable environment
+## Approved zero-cost split-staging pathway
+
+When no isolated hosted Supabase database is available and creating one would require an upgrade, use the repository's split-staging pathway instead of touching the default `Battle` database:
+
+### Database and authorization lane
+
+GitHub Actions starts a disposable local Supabase instance and executes:
+
+- every repository migration;
+- every PostgreSQL pgTAP and RLS suite;
+- lawyer-only authority assertions;
+- technical-admin denial assertions;
+- append-only conflict-decision protection;
+- clearance and lawyer-overlap scheduling gates;
+- cross-firm isolation;
+- non-destructive feature withdrawal and restoration;
+- `supabase/staging/phase1a_acceptance_seed.sql` validation.
+
+This lane is authoritative for database behavior. It is destroyed after the workflow and never receives live data.
+
+### Whole-office and print lane
+
+`acceptance/phase1a/index.html` is a standalone synthetic office simulator. It contains no Supabase URL, key, password, cookie, production record or network mutation. It provides:
+
+- secretary view;
+- lawyer review and decision view;
+- technical-admin denial view;
+- Executive Command Center queues;
+- intake and conflict-warning review;
+- clearance-gated scheduling;
+- printable intake/conflict/consultation packet.
+
+The browser CI job runs `scripts/capture-phase1a-acceptance.mjs` and uploads the `phase1a-office-acceptance` artifact containing:
+
+- the standalone HTML simulator;
+- secretary Command Center screenshot;
+- secretary inquiry screenshot;
+- lawyer conflict-review screenshot;
+- lawyer-cleared scheduling screenshot;
+- technical-admin denial screenshot;
+- printable packet screenshot;
+- A4 PDF packet.
+
+This artifact is the approved zero-cost surface for secretary, lawyer, technical-admin and print/PDF review. It does **not** claim that the application is deployed end to end. Live deployment acceptance remains a separate release gate before production use.
+
+## Optional isolated hosted environment
+
+Use this only when a genuinely isolated environment already exists at no additional cost or has separate approval:
 
 1. Use a local or isolated staging Supabase project. Never seed the production project.
 2. Apply all repository migrations in order.
@@ -38,88 +85,89 @@ Use separate synthetic users so role boundaries are visible:
 | Synthetic Partner | `partner` | Review candidates and record lawyer decision |
 | Other Firm User | `partner` in a second synthetic firm | No access to the first firm's intake or conflict records |
 
-Every acceptance session must record the date, staging environment, build commit, reviewer and result. Screenshots must contain synthetic data only.
+Every acceptance session must record the date, staging surface, build commit, reviewer and result. Screenshots must contain synthetic data only.
 
 ## Gate A — Public inquiry
 
 1. Open the public inquiry form on desktop and mobile width.
 2. Confirm the no-attorney-client-relationship statement appears before submission.
-3. Submit a synthetic inquiry using a `.test` address.
+3. Submit a synthetic inquiry using a `.test` address when an isolated hosted environment is available.
 4. Confirm the user sees only a random `INQ-...` reference.
 5. Confirm no internal `BAT-I-...` reference appears in the response, page source or browser network payload.
 6. Repeat submissions from one synthetic fingerprint until the durable hourly limit rejects the excess request safely.
 7. Confirm malformed data and honeypot submissions do not create an inquiry.
 
-Evidence:
+Zero-cost evidence:
 
-- public-form screenshot;
-- redacted network response showing only the public reference;
-- database query showing a separate internal reference;
-- CI public-route and pgTAP results.
+- public Playwright smoke test;
+- public-route integration tests;
+- pgTAP public-reference and rate-limit assertions;
+- the existing healthy public preview for visual review where available.
+
+A standalone simulator does not replace the public request/response tests.
 
 ## Gate B — Secretary intake preparation
 
-1. Sign in as Synthetic Secretary.
-2. Open the inquiry queue and confirm the new inquiry has one obvious next action.
-3. Open the seeded `Synthetic Acceptance Prospect` inquiry.
-4. Start intake with urgency, jurisdiction and missing-information notes.
-5. Add `Opposing Holdings` as an adverse organization and add one other related synthetic party.
-6. Add an alias to one party.
-7. Confirm the original public submission remains unchanged and visually separate from staff-entered information.
-8. Print or preview the packet and confirm the original submission, parties and both office references are readable.
+1. Open the `phase1a-office-acceptance` artifact.
+2. Open `index.html` in a current browser.
+3. Select **Secretary** and **Inquiry Review**.
+4. Confirm the inquiry has one obvious next action.
+5. Confirm urgency, jurisdiction, missing information and ownership are easy to read.
+6. Confirm prospective client, opposing party, organization, alias and relationship information are visibly separated.
+7. Confirm the original public submission is visibly immutable and separate from staff-entered information.
+8. Open **Printable Packet** and confirm the original submission, parties and both office references are readable.
 
 Expected result:
 
-- secretary can prepare information;
-- secretary cannot see or use lawyer-decision controls;
+- secretary can understand and prepare information;
+- secretary does not see lawyer-decision controls;
 - large controls remain usable without horizontal scrolling at common desktop and tablet widths.
 
 ## Gate C — Conflict warnings and legal authority
 
-1. Run the conflict search as Synthetic Secretary after adding `Opposing Holdings`.
-2. Confirm warning candidates identify the existing contact and prior matter-party sources with human-readable reasons.
-3. Sign in as Synthetic Technical Admin.
-4. Confirm lawyer review and overall decision controls are absent.
-5. Attempt the controlled decision RPC as Synthetic Technical Admin and confirm PostgreSQL rejects it.
-6. Sign in as Synthetic Associate or Partner.
-7. Review every warning with a written reason.
-8. Attempt to record the overall decision while one warning remains unreviewed and confirm it is blocked.
-9. Finish every warning and record a written disposition.
-10. Attempt to update or delete the decision and confirm the append-only trigger rejects it.
+1. In the artifact, select **Secretary** and confirm warnings are labeled as warnings only.
+2. Select **Technical Admin** and confirm lawyer review and overall decision controls are absent.
+3. Review the CI database result proving the controlled decision RPC rejects technical-admin authority.
+4. Select **Lawyer**.
+5. Confirm every warning has a match source and human-readable reason.
+6. Use **Review both warnings** and confirm the permanent-decision control remains logically separated from candidate review.
+7. Record the simulator's lawyer disposition and confirm the scheduling gate opens.
+8. Review CI evidence that an unreviewed warning blocks the actual database decision.
+9. Review CI evidence that the actual database decision cannot be updated or deleted.
 
 Expected result:
 
 - automated search never declares a legal conflict;
 - technical administration is not treated as legal authority;
-- lawyer reasoning, identity and time are retained permanently.
+- lawyer reasoning, identity and time are retained by the real database implementation.
 
 ## Gate D — Consultation scheduling
 
-1. Attempt to schedule the uncleared synthetic inquiry and confirm it is blocked.
-2. Record a cleared or conditional lawyer decision.
-3. Schedule a consultation in Philippine time as Synthetic Secretary.
-4. Confirm only active managing partners, partners and associates appear in the lawyer selector.
-5. Attempt an overlapping appointment for the same lawyer.
-6. Confirm the screen shows a safe warning and the PostgreSQL exclusion constraint rejects the overlap.
-7. Confirm the consultation appears in the seven-day Command Center list.
+1. In Secretary view, confirm scheduling is shown as locked before clearance.
+2. In Lawyer view, review warnings and record synthetic clearance.
+3. Confirm the simulator opens the scheduling action only after clearance.
+4. Confirm lawyer, method, start and end are readable in Philippine time.
+5. Review CI evidence that only active lawyer-position memberships are selectable by the actual database function.
+6. Review CI evidence that an overlapping appointment is rejected by PostgreSQL.
 
 ## Gate E — Executive Command Center
 
-1. Confirm the seed's urgent task appears in the count.
-2. Leave one intake in staff preparation and one conflict check waiting for lawyer review.
-3. Open the Command Center as each staging role.
-4. Confirm counts reconcile with the underlying queues.
-5. Confirm the lawyer-decision queue links directly to the correct inquiry.
-6. Confirm the staff-intake queue shows urgency, office reference, client name, subject and current stage.
-7. Confirm later unimplemented modules are not represented as live data.
-8. Print the office summary and confirm interactive buttons do not appear on paper.
+1. Select **Command Center**.
+2. Confirm the lawyer-decision queue links directly to the correct inquiry.
+3. Confirm the staff-intake queue shows urgency, office reference, client name, subject and current stage.
+4. Confirm an urgent task and upcoming consultation are visible.
+5. Confirm later unimplemented modules are not represented as live data.
+6. Confirm the page is readable in the secretary, lawyer and technical-admin role views.
 
 ## Gate F — Cross-firm isolation
 
-1. Sign in as Other Firm User.
-2. Try direct URLs for the first firm's inquiry and dashboard records.
-3. Try selecting the first firm's intake, conflict check, candidate and decision IDs through the Data API.
-4. Confirm no title, name, subject, status or existence detail is exposed.
+The static simulator intentionally contains no live tenant records. Cross-firm isolation is therefore accepted only from the disposable Supabase CI suites:
+
+1. Other-firm user cannot select the first firm's inquiry, intake, conflict check, candidate or decision.
+2. Direct identifiers do not disclose title, name, subject, status or existence details.
+3. RLS and controlled RPC checks remain green on the exact PR head.
+
+Do not claim that visual simulator review proves cross-firm isolation.
 
 ## Gate G — Withdrawal and restore rehearsal
 
@@ -131,13 +179,13 @@ The CI database job performs this automatically on a disposable local Supabase i
 4. Confirm no row or table is deleted.
 5. Run `supabase/rollback/phase1a_feature_restore.sql`.
 6. Verify the reviewed grants are restored.
-7. Rerun the complete database and RLS suite if the rehearsal is performed outside CI.
+7. Validate the synthetic seed after restoration.
 
 Production withdrawal requires an approved incident/change record and must preserve all original inquiries, decisions and audit history.
 
 ## Print/PDF inspection checklist
 
-Inspect A4 portrait output using the browser's print preview and one saved PDF:
+Open the artifact's PDF and inspect A4 portrait output:
 
 - no sidebar, navigation or action buttons;
 - no clipped names, references, reasons or conditions;
@@ -147,14 +195,16 @@ Inspect A4 portrait output using the browser's print preview and one saved PDF:
 - decision history includes reviewer and timestamp;
 - consultation time explicitly reflects Philippine time;
 - page breaks do not separate a heading from all of its content;
-- confidential staging packet is not uploaded to a public issue or external service.
+- the packet is explicitly labeled synthetic;
+- the artifact is not treated as a real client file.
 
 ## Acceptance record
 
 | Field | Value |
 |---|---|
-| Staging URL | |
+| Acceptance surface | `phase1a-office-acceptance` artifact / isolated hosted staging |
 | Commit SHA | |
+| GitHub Actions run | |
 | Test date | |
 | Secretary reviewer | |
 | Lawyer reviewer | |
@@ -163,4 +213,4 @@ Inspect A4 portrait output using the browser's print preview and one saved PDF:
 | Result | `PASS` / `FAIL` |
 | Findings or approved exceptions | |
 
-The PR must remain draft when any gate is untested or failed. A passed automated CI run does not replace the old-school office-user and print/PDF review.
+The PR must remain draft when any mandatory gate is untested or failed. The zero-cost split-staging pathway provides genuine database evidence plus genuine office/print evidence, but it does not by itself prove production deployment readiness.
