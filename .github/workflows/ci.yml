@@ -22,8 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        run: npx --yes yarn@1.22.22 install --ignore-scripts --no-lockfile --non-interactive
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
@@ -55,8 +55,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        run: npx --yes yarn@1.22.22 install --ignore-scripts --no-lockfile --non-interactive
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
