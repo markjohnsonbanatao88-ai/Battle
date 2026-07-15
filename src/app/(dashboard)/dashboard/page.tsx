@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle, CalendarClock, CheckCircle2, Inbox, Scale, Users } from 'lucide-react';
+import { AlertTriangle, CalendarClock, CheckCircle2, Clock3, Inbox, Scale, Users } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { PrintButton } from '@/components/dashboard/PrintButton';
 import { requireFirmContext } from '@/lib/auth/current-firm';
@@ -12,6 +12,31 @@ interface UpcomingConsultation {
   consultation_mode: 'office' | 'video' | 'phone';
 }
 
+interface InquiryQueueSummary {
+  id: string;
+  full_name: string;
+  subject: string;
+  internal_reference: string;
+}
+
+interface PendingConflictQueueItem {
+  id: string;
+  requested_at: string;
+  intakes: {
+    id: string;
+    urgency: 'normal' | 'urgent' | 'critical';
+    inquiries: InquiryQueueSummary;
+  };
+}
+
+interface WaitingIntakeQueueItem {
+  id: string;
+  status: 'new' | 'triage' | 'awaiting_information' | 'ready_for_conflict_check';
+  urgency: 'normal' | 'urgent' | 'critical';
+  updated_at: string;
+  inquiries: InquiryQueueSummary;
+}
+
 export default async function DashboardPage() {
   const context = await requireFirmContext();
   const supabase = await createClient();
@@ -21,7 +46,15 @@ export default async function DashboardPage() {
   const nextSevenDays = new Date(now);
   nextSevenDays.setDate(now.getDate() + 7);
 
-  const [pendingConflicts, waitingClients, upcomingResult, newInquiries, urgentTasks] = await Promise.all([
+  const [
+    pendingConflicts,
+    waitingClients,
+    upcomingResult,
+    newInquiries,
+    urgentTasks,
+    pendingConflictQueueResult,
+    waitingIntakeQueueResult,
+  ] = await Promise.all([
     supabase
       .from('conflict_checks')
       .select('id', { count: 'exact', head: true })
@@ -54,6 +87,44 @@ export default async function DashboardPage() {
       .eq('priority', 'urgent')
       .in('status', ['open', 'in_progress', 'blocked'])
       .lte('due_at', nextSevenDays.toISOString()),
+    supabase
+      .from('conflict_checks')
+      .select(`
+        id,
+        requested_at,
+        intakes!inner (
+          id,
+          urgency,
+          inquiries!inner (
+            id,
+            full_name,
+            subject,
+            internal_reference
+          )
+        )
+      `)
+      .eq('firm_id', context.firm.id)
+      .eq('status', 'review_required')
+      .order('requested_at', { ascending: true })
+      .limit(6),
+    supabase
+      .from('intakes')
+      .select(`
+        id,
+        status,
+        urgency,
+        updated_at,
+        inquiries!inner (
+          id,
+          full_name,
+          subject,
+          internal_reference
+        )
+      `)
+      .eq('firm_id', context.firm.id)
+      .in('status', ['new', 'triage', 'awaiting_information', 'ready_for_conflict_check'])
+      .order('updated_at', { ascending: true })
+      .limit(6),
   ]);
 
   const decisionCount = pendingConflicts.count ?? 0;
@@ -61,6 +132,8 @@ export default async function DashboardPage() {
   const inquiryCount = newInquiries.count ?? 0;
   const urgentTaskCount = urgentTasks.count ?? 0;
   const upcoming = (upcomingResult.data ?? []) as UpcomingConsultation[];
+  const pendingConflictQueue = (pendingConflictQueueResult.data ?? []) as unknown as PendingConflictQueueItem[];
+  const waitingIntakeQueue = (waitingIntakeQueueResult.data ?? []) as unknown as WaitingIntakeQueueItem[];
   const needsAttention = decisionCount > 0 || waitingCount > 0 || urgentTaskCount > 0;
 
   return (
@@ -95,8 +168,8 @@ export default async function DashboardPage() {
           question="What needs a lawyer’s decision?"
           answer={`${decisionCount} conflict review${decisionCount === 1 ? '' : 's'}`}
           instruction={decisionCount > 0 ? 'Review warnings and record the written lawyer decision.' : 'No conflict decision is currently waiting.'}
-          href="/dashboard/inquiries"
-          linkLabel="Open inquiry review"
+          href="#lawyer-decision-queue"
+          linkLabel="See lawyer queue"
           icon={<Scale className="h-7 w-7" />}
           urgent={decisionCount > 0}
         />
@@ -104,8 +177,8 @@ export default async function DashboardPage() {
           question="Which prospective clients are waiting?"
           answer={`${waitingCount} intake${waitingCount === 1 ? '' : 's'}`}
           instruction={waitingCount > 0 ? 'Complete parties, missing information or conflict review.' : 'No intake is waiting for staff action.'}
-          href="/dashboard/inquiries"
-          linkLabel="Open client intake"
+          href="#staff-intake-queue"
+          linkLabel="See staff queue"
           icon={<Users className="h-7 w-7" />}
           urgent={waitingCount > 0}
         />
@@ -126,6 +199,50 @@ export default async function DashboardPage() {
           icon={<AlertTriangle className="h-7 w-7" />}
           urgent={urgentTaskCount > 0}
         />
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <QueueSection
+          id="lawyer-decision-queue"
+          title="Lawyer decisions waiting"
+          description="Automated search results are warnings only. A managing partner, partner or associate must review every warning and write the decision."
+          icon={<Scale className="h-6 w-6" />}
+          error={Boolean(pendingConflictQueueResult.error)}
+          emptyMessage="No conflict review is waiting for a lawyer decision."
+        >
+          {pendingConflictQueue.map((item) => (
+            <QueueCard
+              key={item.id}
+              inquiry={item.intakes.inquiries}
+              urgency={item.intakes.urgency}
+              label="Conflict review requested"
+              timestamp={item.requested_at}
+              href={`/dashboard/inquiries/${item.intakes.inquiries.id}`}
+              action="Open lawyer review"
+            />
+          ))}
+        </QueueSection>
+
+        <QueueSection
+          id="staff-intake-queue"
+          title="Staff intake work waiting"
+          description="Secretary and intake staff complete the facts and parties. Legal conclusions remain with the lawyers."
+          icon={<Clock3 className="h-6 w-6" />}
+          error={Boolean(waitingIntakeQueueResult.error)}
+          emptyMessage="No intake is waiting for staff preparation."
+        >
+          {waitingIntakeQueue.map((item) => (
+            <QueueCard
+              key={item.id}
+              inquiry={item.inquiries}
+              urgency={item.urgency}
+              label={item.status.replaceAll('_', ' ')}
+              timestamp={item.updated_at}
+              href={`/dashboard/inquiries/${item.inquiries.id}`}
+              action="Continue intake"
+            />
+          ))}
+        </QueueSection>
       </div>
 
       <section className="mt-6 rounded-lg border border-border bg-card p-6 shadow-sm">
@@ -197,6 +314,84 @@ function CommandCard({
       <Link href={href} className="mt-5 inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-5 text-base font-semibold text-primary-foreground print:hidden">
         {linkLabel}
       </Link>
+    </article>
+  );
+}
+
+function QueueSection({
+  id,
+  title,
+  description,
+  icon,
+  error,
+  emptyMessage,
+  children,
+}: {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  error: boolean;
+  emptyMessage: string;
+  children: React.ReactNode;
+}) {
+  const hasItems = Array.isArray(children) ? children.length > 0 : Boolean(children);
+
+  return (
+    <section id={id} className="scroll-mt-6 rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="flex items-start gap-3 border-b border-border pb-4">
+        {icon}
+        <div>
+          <h2 className="text-2xl font-semibold">{title}</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      {error ? (
+        <p className="mt-5 rounded-md border border-destructive/40 bg-destructive/10 p-5 text-base text-destructive">
+          This queue could not be loaded. No record was changed.
+        </p>
+      ) : hasItems ? (
+        <div className="mt-5 grid gap-4">{children}</div>
+      ) : (
+        <p className="mt-5 rounded-md border border-border bg-background p-5 text-base">{emptyMessage}</p>
+      )}
+    </section>
+  );
+}
+
+function QueueCard({
+  inquiry,
+  urgency,
+  label,
+  timestamp,
+  href,
+  action,
+}: {
+  inquiry: InquiryQueueSummary;
+  urgency: 'normal' | 'urgent' | 'critical';
+  label: string;
+  timestamp: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <article className={`rounded-md border p-5 ${urgency === 'critical' ? 'border-destructive bg-destructive/5' : urgency === 'urgent' ? 'border-amber-700 bg-amber-50/40' : 'border-border bg-background'}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{inquiry.internal_reference}</p>
+          <h3 className="mt-2 text-xl font-semibold">{inquiry.full_name}</h3>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">{inquiry.subject}</p>
+        </div>
+        <span className="rounded-full border border-current px-3 py-1 text-xs font-bold uppercase tracking-wide">{urgency}</span>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm">
+        <p className="capitalize text-muted-foreground">
+          {label} · {new Date(timestamp).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}
+        </p>
+        <Link href={href} className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 font-semibold text-primary-foreground print:hidden">
+          {action}
+        </Link>
+      </div>
     </article>
   );
 }
