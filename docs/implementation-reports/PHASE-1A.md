@@ -108,7 +108,7 @@ New authoritative records:
 
 ## Tests and verified evidence
 
-The current PR head must have a successful GitHub Actions run before review or merge. Run **#91** (`29457638533`) passed on final head `10a908d3447dc35948a879da673a68aac302aebe`.
+The current PR head must have a successful GitHub Actions run before review or merge. The PR checks are authoritative; historical run and artifact identifiers are supporting evidence only.
 
 Verified gates include:
 
@@ -148,11 +148,9 @@ Disposable Supabase in GitHub Actions validates the real migrations, functions, 
 - the standalone interactive HTML simulator;
 - a two-page A4 intake/conflict/consultation PDF.
 
-Final artifact ID: `8359976384`
+Every successful run creates a fresh artifact tied to that run's head SHA and recorded by GitHub with a SHA-256 digest.
 
-Final artifact digest: `sha256:8a1f223ee12c7e956c02912d454ac776225977b550a069642cf829ef2dc1cb45`
-
-The PDF was rendered and visually inspected after download. It contained two readable pages with no clipped names, references, warning reasons, decision history or consultation fields.
+The generated PDF was rendered and visually inspected after download. It contained two readable pages with no clipped names, references, warning reasons, decision history or consultation fields.
 
 This split-staging approach does not claim live end-to-end deployment. It supplies zero-cost database evidence plus genuine office-role and print-review evidence while production remains untouched.
 
