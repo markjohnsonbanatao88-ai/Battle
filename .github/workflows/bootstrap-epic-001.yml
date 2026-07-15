@@ -1,0 +1,55 @@
+name: Bootstrap EPIC-001 snapshot
+
+on:
+  push:
+    branches:
+      - epic-001/test-infrastructure
+    paths:
+      - '.bootstrap/**'
+      - '.github/workflows/bootstrap-epic-001.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epic-001/test-infrastructure
+          fetch-depth: 0
+      - name: Wait for complete upload
+        id: ready
+        shell: bash
+        run: |
+          if [[ ! -f .bootstrap/READY ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          expected="$(cat .bootstrap/READY)"
+          actual="$(find .bootstrap -maxdepth 1 -type f -name 'tree.b64.part*' | wc -l | tr -d ' ')"
+          if [[ "$actual" != "$expected" ]]; then
+            echo "Expected $expected chunks, found $actual"
+            exit 1
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+      - name: Reconstruct exact repository snapshot
+        if: steps.ready.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .bootstrap/tree.b64.part* | base64 --decode > /tmp/batalla-tree.tar.gz
+          mkdir -p /tmp/batalla-tree
+          tar -xzf /tmp/batalla-tree.tar.gz -C /tmp/batalla-tree
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/batalla-tree/. .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Snapshot already matches."
+            exit 0
+          fi
+          git commit -m "test: establish EPIC-001 quality and RLS gates"
+          git push origin HEAD:epic-001/test-infrastructure
