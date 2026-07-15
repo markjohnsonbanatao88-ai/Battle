@@ -61,7 +61,8 @@ export async function createScheduledConsultationAction(formData: FormData) {
     });
 
   const fallback = text(formData, 'inquiryId');
-  if (!parsed.success || !start || !end || new Date(end) <= new Date(start)) {
+  const invalidTime = !start || !end || new Date(end).getTime() <= new Date(start).getTime();
+  if (!parsed.success || invalidTime) {
     finish(z.string().uuid().safeParse(fallback).success ? fallback : 'invalid', 'Select a lawyer and a valid start and end time.', 'error');
   }
 
