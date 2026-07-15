@@ -13,7 +13,7 @@ This implementation follows the BatallaOS master architecture and the old-school
 - Branch: `phase-1a/intake-conflict-consultation`
 - Pull request: `#6`
 - Review state: draft pending recorded human office acceptance
-- Final verified head: `99c0241f5cfe536ddeb6c4e1595c6664e5c2eb40`
+- Verification source of truth: the latest successful GitHub Actions run attached to the current PR head
 
 ## Implemented application behavior
 
@@ -108,9 +108,9 @@ New authoritative records:
 
 ## Tests and verified evidence
 
-GitHub Actions run **#89** (`29457494732`) passed on head `99c0241f5cfe536ddeb6c4e1595c6664e5c2eb40`.
+The current PR head must have a successful GitHub Actions run before review or merge. Run **#89** (`29457494732`) is the historical evidence run that first verified the complete zero-cost acceptance pipeline.
 
-Verified gates:
+Verified gates include:
 
 - lint;
 - unit, component, public-route and protected server-action integration tests;
@@ -142,17 +142,15 @@ Disposable Supabase in GitHub Actions validates the real migrations, functions, 
 
 `acceptance/phase1a/index.html` is a standalone synthetic simulator containing secretary, lawyer and technical-admin views. It has no live database, key, password or real client data.
 
-`scripts/capture-phase1a-acceptance.mjs` generated and CI uploaded the `phase1a-office-acceptance` artifact containing:
+`scripts/capture-phase1a-acceptance.mjs` generates and CI uploads the `phase1a-office-acceptance` artifact containing:
 
 - six role/workflow screenshots;
 - the standalone interactive HTML simulator;
 - a two-page A4 intake/conflict/consultation PDF.
 
-Final artifact ID: `8359915373`
+The artifact attached to run #89 had ID `8359915373` and digest `sha256:9f47a5b62e785f237d73006caf1773241839a395a559ed3983b921a77943517b`. Every later successful run creates a fresh equivalent artifact tied to its own head SHA.
 
-Final artifact digest: `sha256:9f47a5b62e785f237d73006caf1773241839a395a559ed3983b921a77943517b`
-
-The PDF was rendered and visually inspected after download. It contains two readable pages with no clipped names, references, warning reasons, decision history or consultation fields.
+The PDF was rendered and visually inspected after download. It contained two readable pages with no clipped names, references, warning reasons, decision history or consultation fields.
 
 This split-staging approach does not claim live end-to-end deployment. It supplies zero-cost database evidence plus genuine office-role and print-review evidence while production remains untouched.
 
