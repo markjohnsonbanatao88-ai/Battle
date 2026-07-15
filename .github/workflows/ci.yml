@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, types, unit tests, build
+    name: Lint, unit tests, build, strict types
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -25,9 +25,9 @@ jobs:
       - name: Install dependencies
         run: npx --yes yarn@1.22.22 install --ignore-scripts --no-lockfile --non-interactive
       - run: npm run lint
-      - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run build
+      - run: npm run typecheck
 
   database:
     name: Supabase migrations and RLS tests
