@@ -33,6 +33,10 @@ jobs:
         run: |
           set +e
           {
+            echo "Per-chunk normalized hashes:"
+            for file in .github/import/chunk-*.txt; do
+              printf '%s  %s\n' "$(tr -d '\r\n\t ' < "$file" | sha256sum | awk '{print $1}')" "$file"
+            done
             cat .github/import/chunk-*.txt | tr -d '\r\n\t ' > /tmp/epic.patch.gz.b64
             echo "cat_status=$?"
             echo "encoded_bytes=$(wc -c < /tmp/epic.patch.gz.b64)"
