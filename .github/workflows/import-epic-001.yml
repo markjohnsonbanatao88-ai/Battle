@@ -1,0 +1,89 @@
+name: Import EPIC-001 snapshot
+
+on:
+  push:
+    branches:
+      - epic-001/test-infrastructure
+    paths:
+      - '.github/import/chunk-*.txt'
+      - '.github/workflows/import-epic-001.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/import/chunk-*.txt'
+      - '.github/workflows/import-epic-001.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epic-001/test-infrastructure
+          fetch-depth: 0
+
+      - name: Reconstruct and verify patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          parts=(
+            .github/import/chunk-000.txt
+            .github/import/chunk-001.txt
+            .github/import/chunk-002.txt
+            .github/import/chunk-003.txt
+            .github/import/chunk-004.txt
+            .github/import/chunk-005a.txt
+            .github/import/chunk-005b.txt
+            .github/import/chunk-006.txt
+          )
+          cat "${parts[@]}" | tr -d '\r\n\t ' > /tmp/epic.patch.gz.b64
+          base64 --decode /tmp/epic.patch.gz.b64 > /tmp/epic.patch.gz
+          echo "a22f806f6ea208ebbd5381d419e763e93b750172081535ecac46880c5e4deca9  /tmp/epic.patch.gz" | sha256sum -c -
+          gzip -t /tmp/epic.patch.gz
+          gunzip -c /tmp/epic.patch.gz > /tmp/epic.patch
+          echo "4982f1a471163017d85fea7baf14d90abacb29ea640e75bc87348bdd041fe90e  /tmp/epic.patch" | sha256sum -c -
+
+      - name: Build and validate target tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          current_branch="epic-001/test-infrastructure"
+          current_head="$(git rev-parse HEAD)"
+          echo "$current_head" > /tmp/current-head
+          git checkout -B imported aa1b53ebc3471562a47c8a64d0bf805deb061ab0
+          git apply --index --3way /tmp/epic.patch
+          test -f package.json
+          test -f package-lock.json
+          test -f vitest.config.ts
+          test -f playwright.config.ts
+          test -f docs/26_TEST_INFRASTRUCTURE.md
+          test -f supabase/tests/001_rls_isolation.test.sql
+          test -d src
+          git diff --cached --check
+          git commit -m "test: establish EPIC-001 quality and RLS gates"
+          git rev-parse HEAD > /tmp/target-commit
+          git checkout "$current_branch"
+
+      - name: Commit complete repository on branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_commit="$(cat /tmp/target-commit)"
+          current_head="$(cat /tmp/current-head)"
+          git read-tree --reset -u "$target_commit"
+          git checkout "$current_head" -- .github/workflows
+          git add -A
+          git diff --cached --check
+          git commit -m "test: establish EPIC-001 quality and RLS gates"
+
+      - name: Push complete branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:epic-001/test-infrastructure
