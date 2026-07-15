@@ -2,7 +2,7 @@
   "name": "batalla-law-office-os",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm@10.9.2",
+  "packageManager": "yarn@1.22.22",
   "engines": {
     "node": "22.x"
   },
