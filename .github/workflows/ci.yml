@@ -43,7 +43,20 @@ jobs:
       - name: Start local Supabase
         run: supabase start
       - name: Run database and RLS tests
-        run: supabase test db
+        shell: bash
+        run: |
+          set +e
+          supabase test db 2>&1 | tee db-test.log
+          status=${PIPESTATUS[0]}
+          tail -n 250 db-test.log > db-test-tail.log
+          exit "$status"
+      - name: Upload database failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-test-failure
+          path: db-test-tail.log
+          retention-days: 3
       - name: Stop local Supabase
         if: always()
         run: supabase stop --no-backup
