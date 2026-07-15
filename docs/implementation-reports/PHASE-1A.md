@@ -13,7 +13,7 @@ This implementation follows the BatallaOS master architecture and the old-school
 - Branch: `phase-1a/intake-conflict-consultation`
 - Pull request: `#6`
 - Review state: draft pending recorded human office acceptance
-- Final verified head: `44c98a29c124550634afcd9b74e2dc9dbfaf146a`
+- Final verified head: `99c0241f5cfe536ddeb6c4e1595c6664e5c2eb40`
 
 ## Implemented application behavior
 
@@ -108,7 +108,7 @@ New authoritative records:
 
 ## Tests and verified evidence
 
-GitHub Actions run **#88** (`29457320863`) passed on head `44c98a29c124550634afcd9b74e2dc9dbfaf146a`.
+GitHub Actions run **#89** (`29457494732`) passed on head `99c0241f5cfe536ddeb6c4e1595c6664e5c2eb40`.
 
 Verified gates:
 
@@ -125,7 +125,8 @@ Verified gates:
 - cross-firm isolation;
 - durable rate limiting;
 - non-destructive feature withdrawal and restore rehearsal;
-- deterministic synthetic staging-seed validation.
+- deterministic synthetic staging-seed validation;
+- automated office simulator screenshot and A4 PDF generation.
 
 ## Zero-cost split-staging workaround
 
@@ -147,9 +148,9 @@ Disposable Supabase in GitHub Actions validates the real migrations, functions, 
 - the standalone interactive HTML simulator;
 - a two-page A4 intake/conflict/consultation PDF.
 
-Artifact ID: `8359862521`
+Final artifact ID: `8359915373`
 
-Artifact digest: `sha256:5d243cc2ab6ba665a06b302d06d8a699e4d820c1bbb7e3049af741f4bc40322b`
+Final artifact digest: `sha256:9f47a5b62e785f237d73006caf1773241839a395a559ed3983b921a77943517b`
 
 The PDF was rendered and visually inspected after download. It contains two readable pages with no clipped names, references, warning reasons, decision history or consultation fields.
 
